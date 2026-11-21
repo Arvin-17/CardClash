@@ -79,20 +79,47 @@ func test_hand_cards_stay_clickable_at_the_play_limit() -> void:
 	assert_eq(b.cards_played, b.plays_per_round)
 
 
-func test_hand_cards_can_be_played_after_ready() -> void:
+func test_ready_ends_the_round_at_once() -> void:
+	await _start()
+	assert_false(_c.battle.enemy.stayed, "the enemy is still mid-turn")
+	_c.stay()
+	assert_true(_c.battle.enemy.stayed, "it played out its turn instantly")
+	assert_eq(_c.state, BattleController.State.RESOLVE, "no waiting for the enemy or the timer")
+
+
+func test_super_bust_ends_the_round_at_once() -> void:
 	await _start()
 	var b := _c.battle
-	b.player_stay()
-	var index := -1
-	for i in b.hand.size():
-		if b.can_play(i) and b.hand[i].is_number():
-			index = i
-			break
-	if index < 0:
-		pass_test("no number card in this opening hand")
-		return
-	assert_true(_c.play(index), "ready only stops drawing")
+	TestHelpers.set_table(b.player, ["10", "10"])
+	b.add_table_card(b.player, Card.pseudo("bonk", 10))
+	_c._check_round_end()
+	assert_eq(_c.state, BattleController.State.RESOLVE)
+
+
+func test_over_21_hit_is_off_but_ready_and_cards_work() -> void:
+	await _start()
+	var b := _c.battle
+	TestHelpers.set_table(b.player, ["10", "10", "5"])
+	_ui._refresh()
+	assert_true(_ui._hit.disabled, "no hitting while over 21")
+	assert_false(_ui._stay.disabled, "you can still ready up")
+	assert_false(_c.battle.player.stayed)
+	_c.hit()
+	assert_eq(b.player.table.size(), 3, "hit refused")
+
+
+func test_heal_button_heals_and_uses_a_card_play() -> void:
+	await _start()
+	var b := _c.battle
+	b.player.hp = 20
+	_ui._request_heal()
+	assert_eq(b.player.hp, 23)
 	assert_eq(b.cards_played, 1)
+	assert_false(_ui._heal.disabled)
+	b.cards_played = b.plays_per_round
+	_ui._request_heal()
+	assert_eq(b.player.hp, 23, "no plays left this round")
+	assert_string_contains(_ui._message.text, "NONE LEFT")
 
 
 func test_attack_bar_starts_empty_every_round() -> void:
