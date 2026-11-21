@@ -1,6 +1,7 @@
 from collections import Counter
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, Header, HTTPException, Request, Response, status
 from sqlalchemy import case, func
 from sqlmodel import select
 
@@ -85,3 +86,21 @@ def stats(session: SessionDep) -> Stats:
         queen_kills=wins,
     )
 
+
+@router.delete("/run/{run_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["admin"])
+def delete_run(
+    run_id: int,
+    request: Request,
+    session: SessionDep,
+    x_admin_key: Annotated[str | None, Header()] = None,
+) -> Response:
+    """Admin only: remove a junk entry during the demo. Needs the X-Admin-Key header."""
+    admin_key = request.app.state.settings.admin_key
+    if not admin_key or x_admin_key != admin_key:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "admin key required")
+    run = session.get(Run, run_id)
+    if run is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "no such run")
+    session.delete(run)
+    session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
