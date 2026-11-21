@@ -30,3 +30,14 @@ static func decide(battle: BattleState) -> String:
 
 static func log_line(text: String) -> void:
 	print("SMOKE ", text)
+
+
+## Run `action` after `seconds`, owned by `node` (so it dies with the scene).
+static func after(node: Node, seconds: float, action: Callable) -> void:
+	var t := Timer.new()
+	t.one_shot = true
+	t.wait_time = seconds
+	t.timeout.connect(action)
+	t.timeout.connect(t.queue_free)
+	node.add_child(t)
+	t.start()
