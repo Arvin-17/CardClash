@@ -28,6 +28,7 @@ Audio="*res://scripts/autoload/audio.gd"
 [cardclash]
 
 api/base_url="http://127.0.0.1:8000"
+api/base_url.web="https://cardclash-api.onrender.com"
 api/timeout_seconds=6.0
 
 [display]

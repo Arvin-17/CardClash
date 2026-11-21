@@ -6,7 +6,8 @@ extends Node
 ## Scenes pass a `done` Callable instead of awaiting, so a scene that changes before the
 ## reply arrives is simply skipped (a freed object's Callable is no longer valid).
 ##
-## Base URL: project setting cardclash/api/base_url, overridable with `-- --api=URL`.
+## Base URL: project setting cardclash/api/base_url (base_url.web for the web export),
+## overridable with `-- --api=URL` so the demo laptop can point at a local server.
 
 signal online_changed(is_online: bool)
 
@@ -16,7 +17,10 @@ var online: bool = false
 
 
 func _ready() -> void:
-	base_url = str(ProjectSettings.get_setting("cardclash/api/base_url", base_url))
+	# get_setting_with_override applies feature-tag overrides, e.g. base_url.web for the web export.
+	var configured: Variant = ProjectSettings.get_setting_with_override("cardclash/api/base_url")
+	if configured != null:
+		base_url = str(configured)
 	timeout_seconds = float(ProjectSettings.get_setting("cardclash/api/timeout_seconds", timeout_seconds))
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--api="):
