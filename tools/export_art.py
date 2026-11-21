@@ -372,11 +372,14 @@ def export_sfx() -> None:
 def main() -> None:
     export_font("pixel", 1)
     export_font("pixel_big", 2)
-    for suit in SUIT_PIP:
-        card_soldier(suit).save(ART / "enemies" / f"{suit[:-1]}_soldier.png")
-    queen(False).save(ART / "enemies" / "queen_of_hearts.png")
-    queen(True).save(ART / "enemies" / "queen_of_hearts_rage.png")
-    export_icons()
+    # Character and card art now comes from tools/sprites (npm run export); only fill in
+    # placeholders where that art is missing, so this script never overwrites it.
+    if not (ART / "anim" / "manifest.json").exists():
+        for suit in SUIT_PIP:
+            card_soldier(suit).save(ART / "enemies" / f"{suit[:-1]}_soldier.png")
+        queen(False).save(ART / "enemies" / "queen_of_hearts.png")
+        queen(True).save(ART / "enemies" / "queen_of_hearts_rage.png")
+        export_icons()
     export_sfx()
     print(f"art written to {ART}")
 

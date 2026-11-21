@@ -9,6 +9,12 @@ func _ready() -> void:
 	bg.color = Palette.BLACK
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
+	# The act's room, dimmed, so the run feels like one place.
+	var room_key := AnimLib.room_key(RunState.act_id)
+	if not room_key.is_empty():
+		var room := AnimLib.sprite({"loop": room_key})
+		room.modulate = Color(0.32, 0.3, 0.38)
+		add_child(room)
 	var act: Dictionary = GameData.act(RunState.act_id)
 	_add(Palette.label(str(act.get("name", "")).to_upper(), Palette.RED, true), Vector2(0, 24), 480)
 	var mode := "DAILY RUN %s" % RunState.daily_date if RunState.is_daily else "SEED %d" % RunState.run_seed
@@ -74,4 +80,4 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _fight() -> void:
 	if is_inside_tree():
-		get_tree().change_scene_to_file(RunState.BATTLE_SCENE)
+		Transition.go(RunState.BATTLE_SCENE)

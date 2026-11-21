@@ -1,0 +1,308 @@
+{
+ "spade_soldier_idle": {
+  "file": "anim/spade_soldier_idle.png",
+  "w": 128,
+  "h": 112,
+  "frames": 34,
+  "cols": 30,
+  "fps": 10,
+  "loop": true
+ },
+ "spade_soldier_tell": {
+  "file": "anim/spade_soldier_tell.png",
+  "w": 128,
+  "h": 112,
+  "frames": 6,
+  "cols": 6,
+  "fps": 10,
+  "loop": false
+ },
+ "spade_soldier_attack_dig": {
+  "file": "anim/spade_soldier_attack_dig.png",
+  "w": 128,
+  "h": 112,
+  "frames": 24,
+  "cols": 24,
+  "fps": 10,
+  "loop": false
+ },
+ "club_soldier_idle": {
+  "file": "anim/club_soldier_idle.png",
+  "w": 128,
+  "h": 112,
+  "frames": 34,
+  "cols": 30,
+  "fps": 10,
+  "loop": true
+ },
+ "club_soldier_tell": {
+  "file": "anim/club_soldier_tell.png",
+  "w": 128,
+  "h": 112,
+  "frames": 6,
+  "cols": 6,
+  "fps": 10,
+  "loop": false
+ },
+ "club_soldier_attack_bonk": {
+  "file": "anim/club_soldier_attack_bonk.png",
+  "w": 128,
+  "h": 112,
+  "frames": 24,
+  "cols": 24,
+  "fps": 10,
+  "loop": false
+ },
+ "diamond_soldier_idle": {
+  "file": "anim/diamond_soldier_idle.png",
+  "w": 128,
+  "h": 112,
+  "frames": 34,
+  "cols": 30,
+  "fps": 10,
+  "loop": true
+ },
+ "diamond_soldier_tell": {
+  "file": "anim/diamond_soldier_tell.png",
+  "w": 128,
+  "h": 112,
+  "frames": 6,
+  "cols": 6,
+  "fps": 10,
+  "loop": false
+ },
+ "diamond_soldier_attack_pilfer": {
+  "file": "anim/diamond_soldier_attack_pilfer.png",
+  "w": 128,
+  "h": 112,
+  "frames": 24,
+  "cols": 24,
+  "fps": 10,
+  "loop": false
+ },
+ "heart_soldier_idle": {
+  "file": "anim/heart_soldier_idle.png",
+  "w": 128,
+  "h": 112,
+  "frames": 34,
+  "cols": 30,
+  "fps": 10,
+  "loop": true
+ },
+ "heart_soldier_tell": {
+  "file": "anim/heart_soldier_tell.png",
+  "w": 128,
+  "h": 112,
+  "frames": 6,
+  "cols": 6,
+  "fps": 10,
+  "loop": false
+ },
+ "heart_soldier_attack_off_with_it": {
+  "file": "anim/heart_soldier_attack_off_with_it.png",
+  "w": 128,
+  "h": 112,
+  "frames": 24,
+  "cols": 24,
+  "fps": 10,
+  "loop": false
+ },
+ "queen_of_hearts_idle": {
+  "file": "anim/queen_of_hearts_idle.png",
+  "w": 128,
+  "h": 112,
+  "frames": 34,
+  "cols": 30,
+  "fps": 10,
+  "loop": true
+ },
+ "queen_of_hearts_rage": {
+  "file": "anim/queen_of_hearts_rage.png",
+  "w": 128,
+  "h": 112,
+  "frames": 20,
+  "cols": 20,
+  "fps": 10,
+  "loop": true
+ },
+ "queen_of_hearts_laugh": {
+  "file": "anim/queen_of_hearts_laugh.png",
+  "w": 128,
+  "h": 112,
+  "frames": 10,
+  "cols": 10,
+  "fps": 10,
+  "loop": true
+ },
+ "queen_of_hearts_tell": {
+  "file": "anim/queen_of_hearts_tell.png",
+  "w": 128,
+  "h": 112,
+  "frames": 7,
+  "cols": 7,
+  "fps": 10,
+  "loop": false
+ },
+ "queen_of_hearts_attack_off_with_its_head": {
+  "file": "anim/queen_of_hearts_attack_off_with_its_head.png",
+  "w": 128,
+  "h": 112,
+  "frames": 34,
+  "cols": 30,
+  "fps": 10,
+  "loop": false
+ },
+ "queen_of_hearts_attack_bonk": {
+  "file": "anim/queen_of_hearts_attack_bonk.png",
+  "w": 128,
+  "h": 112,
+  "frames": 26,
+  "cols": 26,
+  "fps": 10,
+  "loop": false
+ },
+ "queen_of_hearts_attack_pilfer": {
+  "file": "anim/queen_of_hearts_attack_pilfer.png",
+  "w": 128,
+  "h": 112,
+  "frames": 26,
+  "cols": 26,
+  "fps": 10,
+  "loop": false
+ },
+ "queen_of_hearts_attack_dig": {
+  "file": "anim/queen_of_hearts_attack_dig.png",
+  "w": 128,
+  "h": 112,
+  "frames": 26,
+  "cols": 26,
+  "fps": 10,
+  "loop": false
+ },
+ "room_act1_tea": {
+  "file": "anim/room_act1_tea.png",
+  "w": 480,
+  "h": 270,
+  "frames": 48,
+  "cols": 8,
+  "fps": 8,
+  "loop": true
+ },
+ "room_act2_wood": {
+  "file": "anim/room_act2_wood.png",
+  "w": 480,
+  "h": 270,
+  "frames": 48,
+  "cols": 8,
+  "fps": 8,
+  "loop": true
+ },
+ "room_act3_court": {
+  "file": "anim/room_act3_court.png",
+  "w": 480,
+  "h": 270,
+  "frames": 48,
+  "cols": 8,
+  "fps": 8,
+  "loop": true
+ },
+ "title": {
+  "file": "anim/title.png",
+  "w": 480,
+  "h": 270,
+  "frames": 48,
+  "cols": 8,
+  "fps": 8,
+  "loop": true
+ },
+ "ending_win": {
+  "file": "anim/ending_win.png",
+  "w": 480,
+  "h": 270,
+  "frames": 80,
+  "cols": 8,
+  "fps": 10,
+  "loop": false
+ },
+ "ending_lose": {
+  "file": "anim/ending_lose.png",
+  "w": 480,
+  "h": 270,
+  "frames": 70,
+  "cols": 8,
+  "fps": 10,
+  "loop": false
+ },
+ "rabbit_hole": {
+  "file": "anim/rabbit_hole.png",
+  "w": 480,
+  "h": 270,
+  "frames": 70,
+  "cols": 8,
+  "fps": 10,
+  "loop": false
+ },
+ "alice_idle": {
+  "file": "anim/alice_idle.png",
+  "w": 128,
+  "h": 80,
+  "frames": 12,
+  "cols": 12,
+  "fps": 10,
+  "loop": true
+ },
+ "alice_hit": {
+  "file": "anim/alice_hit.png",
+  "w": 128,
+  "h": 80,
+  "frames": 6,
+  "cols": 6,
+  "fps": 10,
+  "loop": false
+ },
+ "alice_stay": {
+  "file": "anim/alice_stay.png",
+  "w": 128,
+  "h": 80,
+  "frames": 6,
+  "cols": 6,
+  "fps": 10,
+  "loop": false
+ },
+ "alice_pump": {
+  "file": "anim/alice_pump.png",
+  "w": 128,
+  "h": 80,
+  "frames": 10,
+  "cols": 10,
+  "fps": 10,
+  "loop": true
+ },
+ "deck": {
+  "file": "cards/deck.png",
+  "w": 26,
+  "h": 36,
+  "cols": 14,
+  "ranks": [
+   "A",
+   "2",
+   "3",
+   "4",
+   "5",
+   "6",
+   "7",
+   "8",
+   "9",
+   "10",
+   "J",
+   "Q",
+   "K"
+  ],
+  "suits": [
+   "spades",
+   "hearts",
+   "clubs",
+   "diamonds"
+  ]
+ }
+}

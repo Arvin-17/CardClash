@@ -11,6 +11,12 @@ func _ready() -> void:
 	bg.color = Palette.BLACK
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
+	# The act's room, dimmed, so the run feels like one place.
+	var room_key := AnimLib.room_key(RunState.act_id)
+	if not room_key.is_empty():
+		var room := AnimLib.sprite({"loop": room_key})
+		room.modulate = Color(0.32, 0.3, 0.38)
+		add_child(room)
 	_center(Palette.label("SPOILS OF THE COURT", Palette.RED, true), 14)
 	_center(Palette.label("GOLD %d   HP %d/%d   DECK %d" % [RunState.gold, RunState.hp, RunState.max_hp, RunState.deck.size()], Palette.GREEN), 36)
 	_center(Palette.label("TAKE ONE CARD [1-3], REMOVE A CARD [R] OR SKIP [K]", Palette.CREAM), 50)
@@ -130,4 +136,4 @@ func _finish() -> void:
 		return
 	_done = true
 	RunState.save()
-	get_tree().change_scene_to_file(RunState.MAP_SCENE)
+	Transition.go(RunState.MAP_SCENE)
