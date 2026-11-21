@@ -72,6 +72,21 @@ func test_hedgehog_shield_blocks_the_next_attack() -> void:
 	assert_eq(b.player.total(), 18, "only one block per charge")
 
 
+func test_attack_messages_never_name_the_attack() -> void:
+	var names := ["dig", "bonk", "pilfer", "off with it", "off with its head", "off_with"]
+	for id: String in ["spade_soldier", "club_soldier", "diamond_soldier", "heart_soldier", "queen_of_hearts"]:
+		var b := TestHelpers.battle(id, DECK, ["num_1", "teacup"])
+		TestHelpers.set_table(b.player, ["10", "5"])
+		var said: Array[String] = []
+		b.message.connect(func(text: String) -> void: said.append(text.to_lower()))
+		for _i in 4:
+			b.fire_surprise()
+		assert_gt(said.size(), 0, "%s's attacks still say what happened" % id)
+		for text: String in said:
+			for attack_name: String in names:
+				assert_false(text.contains(attack_name), "%s said '%s'" % [id, text])
+
+
 func test_every_surprise_in_enemies_json_has_a_script() -> void:
 	for e: Dictionary in GameData.read_json("enemies.json")["enemies"]:
 		var kinds: Array = [e["surprise"]]

@@ -10,4 +10,4 @@ func apply(battle: BattleState, _params: Dictionary) -> void:
 	var card := battle.player.highest_table_card()
 	if card != null:
 		battle.remove_table_card(battle.player, card)
-		battle.message.emit("OFF WITH ITS HEAD! Your %s is gone." % card.face())
+		battle.message.emit("Your highest card, %s, was knocked off!" % card.face())

@@ -5,4 +5,4 @@ extends CardEffect
 func apply(battle: BattleState, params: Dictionary) -> void:
 	var amount := int(params.get("amount", 2))
 	battle.add_table_card(battle.player, Card.pseudo("bonk", amount))
-	battle.message.emit("BONK! +%d to your total." % amount)
+	battle.message.emit("+%d to your total!" % amount)
