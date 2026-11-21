@@ -13,7 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .card_data import CardData
 from .config import Settings, get_settings
 from .db import create_tables, make_engine
-from .routers import cards, daily, runs
+from .routers import cards, daily, leaderboard, runs
 from .schemas import Health
 
 
@@ -53,6 +53,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(cards.router)
     app.include_router(daily.router)
     app.include_router(runs.router)
+    app.include_router(leaderboard.router)
     return app
 
 
