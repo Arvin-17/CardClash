@@ -78,7 +78,7 @@
       "suit": "hearts",
       "boss": true,
       "hp": 50,
-      "base_attack": 5,
+      "base_attack": 4,
       "stay_at": 18,
       "risk": 0.25,
       "intent_seconds": 6,
