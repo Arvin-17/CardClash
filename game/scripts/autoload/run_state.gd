@@ -90,7 +90,7 @@ func is_complete() -> bool:
 	return battle_index >= battles.size()
 
 
-## After each win: gold (10 per soldier, plus the Diamond Soldier's bonus) and a small heal.
+## After each win: gold (run.gold_per_soldier, plus the Diamond Soldier's bonus) and a small heal.
 ## No full heals, so damage carries tension across the act.
 func record_win(enemy_id: String) -> Dictionary:
 	var enemy: Dictionary = GameData.enemy(enemy_id)
@@ -142,6 +142,24 @@ func add_card(id: String) -> void:
 func remove_card(index: int) -> void:
 	if index >= 0 and index < deck.size():
 		deck.remove_at(index)
+
+
+## Shop: spend gold on a card. False (and nothing changes) when you can't afford it.
+func buy_card(id: String, price: int) -> bool:
+	if price < 0 or price > gold:
+		return false
+	gold -= price
+	deck.append(id)
+	return true
+
+
+## Shop: pay to remove a deck card, never going below the minimum deck size.
+func remove_card_for(index: int, price: int, min_deck: int) -> bool:
+	if price < 0 or price > gold or index < 0 or index >= deck.size() or deck.size() <= min_deck:
+		return false
+	gold -= price
+	deck.remove_at(index)
+	return true
 
 
 func time_ms() -> int:
