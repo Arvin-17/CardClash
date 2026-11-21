@@ -11,6 +11,7 @@ const ROUND_SECONDS := 8.0  # a typical round's real length, to decide how often
 func _play_round(b: BattleState) -> void:
 	b.start_round()
 	var surprise_odds := ROUND_SECONDS / b.intent_seconds()
+	var attack_left := true  # the attack bar resets every round and fires at most once
 	var guard := 0
 	while not b.both_done() and guard < 40:
 		guard += 1
@@ -26,7 +27,8 @@ func _play_round(b: BattleState) -> void:
 			b.enemy_hit()
 		elif decision == EnemyAI.STAY or decision == EnemyAI.NONE:
 			b.enemy_stay()
-		if b.rng.randf() < surprise_odds / 6.0:
+		if attack_left and b.rng.randf() < surprise_odds / 6.0:
+			attack_left = false
 			b.fire_surprise()
 	b.force_stay()
 	b.resolve_round()

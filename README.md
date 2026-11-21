@@ -11,7 +11,7 @@ Win the run and the Queen of Hearts loses her head; lose, and Alice does.
   - **Hit**: draw a blind card.
   - **Play**: play up to **2 hand cards per round**, any time the round is live, even after Ready (numbers 1–4, or effects like Drink Me). Hand cards are never greyed out: a third play just tells you the limit. The count resets every round.
   - **Ready**: you're done drawing. The enemy stops stalling, and the round ends **the moment you've both stayed**, without waiting for the timer.
-- The enemy plays on its own clock. Its **intent bar** fills toward a surprise attack. In the last 2 seconds before one lands, the enemy flashes red with a **!** and a warning beep plays. You never see the attack's name, only what it did to you.
+- The enemy plays on its own clock. Its **intent bar** starts empty every round and fills toward one surprise attack (7.5 s in for soldiers, 6.5 s for the Queen). In the last 2 seconds before one lands, the enemy flashes red with a **!** and a warning beep plays. You never see the attack's name, only what it did to you.
 - Closer to 21 wins: the loser takes the difference plus the winner's base attack. Exactly 21 is a critical (×2). Busting costs you `total − 21` plus the enemy's attack.
 
 ## Design
