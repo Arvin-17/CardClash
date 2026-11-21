@@ -15,6 +15,7 @@ signal timer_freeze_requested(seconds: float)
 signal surprise_attack(enemy_id: String, kind: String)
 signal surprise_blocked(enemy_id: String, kind: String)
 signal round_resolved(result: Dictionary)
+signal boss_phase_changed(phase: int)
 signal message(text: String)
 
 var rules: Dictionary
@@ -34,6 +35,8 @@ var plays_left: int = 0
 var enemy_stay_at: int = 17
 var enemy_risk: float = 0.0
 var surprise_count: int = 0
+## Boss phase: 2 once the Queen is enraged.
+var phase: int = 1
 ## Hedgehog Shield charges: each blocks one surprise attack.
 var shield: int = 0
 ## Per-round flags set by effects.
@@ -231,6 +234,25 @@ func enemy_stay() -> void:
 	enemy.stayed = true
 
 
+## Seconds for the intent bar to fill (the Queen speeds up when enraged).
+func intent_seconds() -> float:
+	var rage: Dictionary = enemy_def.get("rage", {})
+	if phase >= 2 and rage.has("intent_seconds"):
+		return float(rage["intent_seconds"])
+	return float(enemy_def.get("intent_seconds", 9))
+
+
+## Rage meter: below 50% HP the Queen is enraged (stays at 19, attacks faster).
+func _check_boss_phase() -> void:
+	var rage: Dictionary = enemy_def.get("rage", {})
+	if rage.is_empty() or phase != 1 or enemy.is_dead():
+		return
+	if float(enemy.hp) < float(enemy.max_hp) * float(rage.get("below_hp_ratio", 0.5)):
+		phase = 2
+		enemy_stay_at = int(rage.get("stay_at", enemy_stay_at))
+		boss_phase_changed.emit(2)
+
+
 ## Which surprise attack fires next (the Queen cycles a learnable pattern).
 func next_surprise() -> String:
 	var kind := str(enemy_def.get("surprise", ""))
@@ -291,6 +313,7 @@ func resolve_round() -> Dictionary:
 	var heal_on_win := int(enemy_def.get("heal_on_win", 0))
 	if result["winner"] == "enemy" and heal_on_win > 0 and not enemy.is_dead():
 		enemy.heal(heal_on_win)
+	_check_boss_phase()
 	result["round"] = round_number
 	result["player_bust"] = pt > target
 	result["blackjack"] = pt == target

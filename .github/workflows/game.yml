@@ -70,3 +70,9 @@ jobs:
           godot --headless --fixed-fps 60 --quit-after 30000 res://scenes/battle.tscn -- --autoplay 2>&1 | tee /tmp/battle.log
           if grep -E "SCRIPT ERROR|Parse Error" /tmp/battle.log; then exit 1; fi
           grep -q "SMOKE battle" /tmp/battle.log || { echo "the battle never finished"; exit 1; }
+
+      - name: Smoke run (a whole run, menu to ending, played by the autoplay bot)
+        run: |
+          godot --headless --fixed-fps 60 --quit-after 400000 -- --autoplay 2>&1 | tee /tmp/run.log
+          if grep -E "SCRIPT ERROR|Parse Error|class instance is gone" /tmp/run.log; then exit 1; fi
+          grep -q "SMOKE run" /tmp/run.log || { echo "the run never reached an ending"; exit 1; }

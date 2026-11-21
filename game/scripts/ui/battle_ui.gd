@@ -26,6 +26,8 @@ var _stay: Button
 var _overlay: Panel
 var _overlay_title: Label
 var _overlay_button: Button
+var _overlay_detail: Label
+var _portrait: ColorRect
 
 const TIMER_W := 200.0
 const INTENT_W := 48.0
@@ -45,6 +47,7 @@ func _ready() -> void:
 	Events.surprise_attack.connect(_on_surprise)
 	Events.surprise_blocked.connect(func(_id: String, kind: String) -> void: _flash("BLOCKED %s!" % kind.to_upper().replace("_", " ")))
 	Events.round_resolved.connect(_on_round_resolved)
+	Events.boss_phase_changed.connect(func(_phase: int) -> void: _portrait.color = Palette.BLACK)
 	Events.message.connect(func(text: String) -> void: _message.text = text)
 	Events.battle_won.connect(func(_id: String) -> void: _show_end(true))
 	Events.battle_lost.connect(func(_id: String) -> void: _show_end(false))
@@ -77,11 +80,11 @@ func _build() -> void:
 	_counts = _label(Vector2(370, 4), "", Palette.GREEN)
 
 	# The enemy across the table (placeholder portrait until the designer's sprite lands).
-	var portrait := ColorRect.new()
-	portrait.color = Palette.RED
-	portrait.position = Vector2(216, 16)
-	portrait.size = Vector2(48, 56)
-	add_child(portrait)
+	_portrait = ColorRect.new()
+	_portrait.color = Palette.RED
+	_portrait.position = Vector2(216, 16)
+	_portrait.size = Vector2(48, 56)
+	add_child(_portrait)
 	var intent_bg := ColorRect.new()
 	intent_bg.color = Palette.GREEN
 	intent_bg.position = Vector2(216, 75)
@@ -124,6 +127,11 @@ func _build() -> void:
 	_overlay_title.size = Vector2(240, 16)
 	_overlay_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_overlay.add_child(_overlay_title)
+	_overlay_detail = Palette.label("", Palette.CREAM)
+	_overlay_detail.position = Vector2(0, 34)
+	_overlay_detail.size = Vector2(240, 8)
+	_overlay_detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_overlay.add_child(_overlay_detail)
 	_overlay_button = Button.new()
 	_overlay_button.text = "CONTINUE [ENTER]"
 	_overlay_button.position = Vector2(64, 50)
@@ -283,8 +291,13 @@ func _on_round_resolved(r: Dictionary) -> void:
 func _show_end(won: bool) -> void:
 	_overlay_title.text = "VICTORY!" if won else "OFF WITH HER HEAD!"
 	_overlay_title.add_theme_color_override("font_color", Palette.CREAM if won else Palette.RED)
+	_overlay_detail.text = "GOLD %d   HP %d/%d" % [RunState.gold, RunState.hp, RunState.max_hp] if won else ""
 	_overlay.visible = true
+	if Autoplay.enabled():
+		Autoplay.after(self, 0.5, _on_continue)
 
 
 func _on_continue() -> void:
-	get_tree().change_scene_to_file("res://scenes/main_menu.tscn")
+	if _overlay.visible:
+		_overlay.visible = false
+		get_tree().change_scene_to_file(RunState.scene_after_battle())

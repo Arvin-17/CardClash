@@ -19,6 +19,8 @@ var _ai_wait_ticks: int = 0
 var _freezes: int = 0
 var _last_intent: float = -1.0
 var _autoplay: bool = false
+## Launched on its own (F6 / smoke run) rather than from the run map.
+var _standalone: bool = false
 
 @onready var round_timer: Timer = $RoundTimer
 @onready var ai_timer: Timer = $AiTimer
@@ -36,8 +38,9 @@ func _ready() -> void:
 
 
 func start(enemy_id: String) -> void:
-	if RunState.deck.is_empty():
+	if not RunState.active:
 		# Scene launched on its own (F6 in the editor, or a headless smoke run).
+		_standalone = true
 		RunState.new_run(Rng.new_seed())
 		enemy_id = RunState.current_enemy_id()
 	battle = BattleState.new(GameData.rules, GameData.enemy(enemy_id), Rng.rng, RunState.hp, RunState.max_hp)
@@ -54,10 +57,11 @@ func start(enemy_id: String) -> void:
 	battle.round_resolved.connect(Events.round_resolved.emit)
 	battle.message.connect(Events.message.emit)
 	battle.timer_freeze_requested.connect(_freeze_round_timer)
+	battle.boss_phase_changed.connect(_on_boss_phase)
 	Events.battle_started.emit(enemy_id)
 	Events.hp_changed.emit("player", battle.player.hp, battle.player.max_hp)
 	Events.hp_changed.emit("enemy", battle.enemy.hp, battle.enemy.max_hp)
-	intent_timer.wait_time = float(battle.enemy_def.get("intent_seconds", 9))
+	intent_timer.wait_time = battle.intent_seconds()
 	_deal()
 
 
@@ -174,6 +178,13 @@ func _on_intent_full() -> void:
 	_check_round_end()
 
 
+## The Queen's rage phase: faster intent bar, plus the designer's rage animation and music change.
+func _on_boss_phase(phase: int) -> void:
+	intent_timer.wait_time = battle.intent_seconds()
+	Events.boss_phase_changed.emit(phase)
+	Events.message.emit("THE QUEEN IS ENRAGED!")
+
+
 ## Pocket Watch: pause the round timer without eating the player's time.
 func _freeze_round_timer(seconds: float) -> void:
 	_freezes += 1
@@ -216,10 +227,12 @@ func _end() -> void:
 	if _autoplay:
 		Autoplay.log_line("battle %s vs %s after %d rounds" % ["won" if battle.player_won() else "lost", battle.enemy_id(), battle.round_number])
 	if battle.player_won():
+		RunState.record_win(battle.enemy_id())
 		Events.battle_won.emit(battle.enemy_id())
 	else:
+		RunState.record_loss(battle.enemy_id())
 		Events.battle_lost.emit(battle.enemy_id())
-	if _autoplay:
+	if _autoplay and _standalone:
 		get_tree().quit()
 
 
