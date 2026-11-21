@@ -3,6 +3,7 @@
 # GUT is installed from the Asset Library locally and by CI (see game.yml)
 /game/addons/gut/
 /game/build/
+/game/export_credentials.cfg
 /game/export/
 *.translation
 
