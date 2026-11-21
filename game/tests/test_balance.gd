@@ -13,13 +13,17 @@ func _play_round(b: BattleState) -> void:
 	var surprise_odds := ROUND_SECONDS / b.intent_seconds()
 	var attack_left := true  # the attack bar resets every round and fires at most once
 	var guard := 0
-	while not b.both_done() and guard < 40:
+	while not b.round_over() and guard < 40:
 		guard += 1
 		var action := Autoplay.decide(b)
 		if action == "hit":
 			b.player_hit()
+		elif action == "heal":
+			b.heal_action()
 		elif action == "stay":
 			b.player_stay()
+			b.finish_enemy_turn()  # Ready ends the round at once
+			break
 		elif action.begins_with("play:"):
 			b.play_card(int(action.trim_prefix("play:")))
 		var decision := EnemyAI.decide(b)
