@@ -174,7 +174,7 @@ func player_hit() -> Card:
 	return card
 
 
-## Ready (the guide's "stay"): you're done drawing this round. Hand cards can still be played
+## Stand (the guide's "stay"): you're done drawing this round. Hand cards can still be played
 ## (within the per-round limit) until the round ends, and surprise attacks can still hit you.
 func player_stay() -> void:
 	player.stayed = true
@@ -356,7 +356,7 @@ func round_over() -> bool:
 	return both_done() or player_super_bust()
 
 
-## Ready ends the round at once: the enemy plays out the rest of its turn instantly.
+## Stand ends the round at once: the enemy plays out the rest of its turn instantly.
 func finish_enemy_turn() -> void:
 	var guard := 0
 	while not enemy.stayed and guard < 20:

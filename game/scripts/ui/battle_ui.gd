@@ -179,7 +179,7 @@ func _build() -> void:
 	_hand_row.add_theme_constant_override("separation", 1)
 	add_child(_hand_row)
 	_hit = _button(Vector2(340, 240), "HIT [H]", controller.hit)
-	_stay = _button(Vector2(408, 240), "READY [SPC]", controller.stay)
+	_stay = _button(Vector2(408, 240), "STAND [SPC]", controller.stay)
 	_heal = _button(Vector2(408, 220), "HEAL +%d [E]" % int(GameData.rule("player.heal_action", 3)), _request_heal)
 
 	# HUD, top-left: pocket-watch timer, round, Alice's HP; then flags, plays, peek.
