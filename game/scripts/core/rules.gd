@@ -55,6 +55,16 @@ static func resolve(
 		"player_total": player_total,
 		"enemy_total": enemy_total,
 	}
+	# Super bust: Alice reached super_bust_at (30). The round ended on the spot and
+	# she takes her bust damage doubled, whatever the enemy holds.
+	var super_at := int(dmg.get("super_bust_at", 0))
+	if super_at > 0 and player_total >= super_at:
+		result["kind"] = "super_bust"
+		result["winner"] = "enemy"
+		result["loser"] = "player"
+		result["damage"] = ((player_total - target) + enemy_attack) * int(dmg.get("super_bust_multiplier", 2))
+		return result
+
 	var player_bust := player_total > target
 	var enemy_bust := enemy_total > target
 	if player_bust and enemy_bust:

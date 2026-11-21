@@ -158,9 +158,10 @@ func draw_cards(n: int) -> void:
 
 # --- ROUND_ACTIVE: player actions --------------------------------------------
 
-## Hit: draw the top blind card. Going bust ends your turn.
+## Hit: draw the top blind card. Not while you're over 21: going bust no longer ends
+## your turn (you can play cards to get back under), but there is nothing to gain by hitting.
 func player_hit() -> Card:
-	if player.stayed:
+	if player.stayed or player.is_bust(target):
 		return null
 	var card := _deal(player)
 	hits_this_round += 1
@@ -170,7 +171,6 @@ func player_hit() -> Card:
 		card.modifier = cap - card.base_value
 		emit_total_changed(player)
 		message.emit("Rabbit's Watch: your %s counts as %d." % [card.face(), cap])
-	_check_player_bust()
 	return card
 
 
@@ -210,7 +210,6 @@ func play_card(index: int, choice: Dictionary = {}) -> bool:
 		player_deck.discard(card)
 	card_played.emit(card)
 	hand_changed.emit()
-	_check_player_bust()
 	return true
 
 
@@ -219,9 +218,21 @@ func params_for(card: Card) -> Dictionary:
 	return params.duplicate(true)
 
 
-func _check_player_bust() -> void:
-	if player.is_bust(target):
-		player.stayed = true
+## The always-available Heal action: +player.heal_action HP (rules.json), using one of
+## this round's hand plays. Returns the HP restored, or 0 when it can't be used.
+func heal_action() -> int:
+	if not can_heal():
+		return 0
+	var before := player.hp
+	cards_played += 1
+	player.heal(int(rules.get("player", {}).get("heal_action", 3)))
+	hp_changed.emit("player", player.hp, player.max_hp)
+	return player.hp - before
+
+
+func can_heal() -> bool:
+	return int(rules.get("player", {}).get("heal_action", 3)) > 0 and not at_play_limit() \
+		and player.hp < player.max_hp
 
 
 # --- helpers used by effect scripts -----------------------------------------
@@ -324,7 +335,6 @@ func fire_surprise() -> String:
 	if effect != null and effect.can_play(self, params):
 		effect.apply(self, params)
 	surprise_attack.emit(enemy_id(), kind)
-	_check_player_bust()
 	return kind
 
 
@@ -332,6 +342,29 @@ func fire_surprise() -> String:
 
 func both_done() -> bool:
 	return player.stayed and enemy.stayed
+
+
+## Over 21 no longer ends your turn, but reaching damage.super_bust_at (30) ends the round
+## on the spot, and Rules.resolve() doubles the damage.
+func player_super_bust() -> bool:
+	var at := int(rules.get("damage", {}).get("super_bust_at", 0))
+	return at > 0 and player.total(target) >= at
+
+
+## The round is over: both sides have stayed, or Alice hit a super bust.
+func round_over() -> bool:
+	return both_done() or player_super_bust()
+
+
+## Ready ends the round at once: the enemy plays out the rest of its turn instantly.
+func finish_enemy_turn() -> void:
+	var guard := 0
+	while not enemy.stayed and guard < 20:
+		guard += 1
+		if EnemyAI.decide(self) == EnemyAI.HIT:
+			enemy_hit()
+		else:
+			enemy_stay()
 
 
 ## The round timer ran out: everyone stays.

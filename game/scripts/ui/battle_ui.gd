@@ -28,6 +28,7 @@ var _watch: WatchTimer
 var _intent_bar: ColorRect
 var _hit: Button
 var _stay: Button
+var _heal: Button
 var _overlay: Panel
 var _overlay_title: Label
 var _overlay_button: Button
@@ -179,6 +180,7 @@ func _build() -> void:
 	add_child(_hand_row)
 	_hit = _button(Vector2(340, 240), "HIT [H]", controller.hit)
 	_stay = _button(Vector2(408, 240), "READY [SPC]", controller.stay)
+	_heal = _button(Vector2(408, 220), "HEAL +%d [E]" % int(GameData.rule("player.heal_action", 3)), _request_heal)
 
 	# HUD, top-left: pocket-watch timer, round, Alice's HP; then flags, plays, peek.
 	_watch = WatchTimer.new()
@@ -316,6 +318,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	match key.keycode:
 		KEY_H:
 			controller.hit()
+		KEY_E:
+			_request_heal()
 		KEY_S:
 			controller.stay()
 		KEY_1, KEY_2, KEY_3, KEY_4, KEY_5:
@@ -402,9 +406,9 @@ func _refresh() -> void:
 			b.player.total(b.target), b.enemy.total(b.target), EnemyAI.preview(b),
 			int(100.0 * (1.0 - controller.intent_timer.time_left / maxf(controller.intent_timer.wait_time, 0.01))),
 			str(b.hit_deck.remaining_by_value())]
-	var can_act := controller.can_act()
-	_hit.disabled = not can_act
-	_stay.disabled = not can_act
+	_hit.disabled = not controller.can_hit()
+	_stay.disabled = not controller.can_act()
+	_heal.disabled = not controller.round_live()
 	for child in _hand_row.get_children():
 		child.queue_free()
 	for i in b.hand.size():
@@ -575,6 +579,23 @@ func _on_card_played(card: Card) -> void:
 
 func _set_portrait(enraged: bool) -> void:
 	_set_enraged(enraged)
+
+
+## Heal is always on offer while the round is live; it uses one of this round's hand plays.
+func _request_heal() -> void:
+	var b := controller.battle
+	if b == null or not controller.round_live():
+		return
+	if b.at_play_limit():
+		_say("HEALING USES A CARD PLAY: NONE LEFT THIS ROUND.")
+		return
+	if b.player.hp >= b.player.max_hp:
+		_say("ALREADY AT FULL HP.")
+		return
+	var healed := controller.heal()
+	if healed > 0:
+		_refresh()
+		_fx.pop("+%d" % healed, Vector2(40, 52), Palette.HP_GREEN, true)
 
 
 ## Cards that need a choice (Painted Rose's value, Mushroom's target and sign) open a chooser.
@@ -771,6 +792,12 @@ func _on_round_resolved(r: Dictionary) -> void:
 		"tie":
 			text = "Tie. No damage."
 			_fx.banner("TIE", Palette.CREAM, 96.0, 2.0)
+		"super_bust":
+			text = "SUPER BUST at %d! Double damage: -%d." % [int(r["player_total"]), damage]
+			_fx.banner("SUPER BUST!", Palette.RED_HI, 120.0, 2.5)
+			_fx.pop("-%d" % damage, Vector2(40, 52), Palette.RED_HI, true)
+			_fx.screen_flash(Palette.RED, 0.45, 0.5)
+			_shake()
 		_:
 			var won: bool = r["winner"] == "player"
 			text = "%s: %d damage%s" % ["You win" if won else "Enemy wins", damage, " CRITICAL!" if r["critical"] else ""]
@@ -788,6 +815,7 @@ func _on_round_resolved(r: Dictionary) -> void:
 	_message.text = text
 	_hit.disabled = true
 	_stay.disabled = true
+	_heal.disabled = true
 
 
 func _show_end(won: bool) -> void:

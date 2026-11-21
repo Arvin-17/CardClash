@@ -8,11 +8,13 @@ Win the run and the Queen of Hearts loses her head; lose, and Alice does.
 
 - Each round, you and the enemy get 2 cards from the shared **blind deck** (a standard 52). Your hand draws up to 3 cards from your own **built deck**.
 - You have 10 seconds:
-  - **Hit**: draw a blind card.
-  - **Play**: play up to **2 hand cards per round**, any time the round is live, even after Ready (numbers 1–4, or effects like Drink Me). Hand cards are never greyed out: a third play just tells you the limit. The count resets every round.
-  - **Ready**: you're done drawing. The enemy stops stalling, and the round ends **the moment you've both stayed**, without waiting for the timer.
+  - **Hit**: draw a blind card (not while you're over 21).
+  - **Play**: play up to **2 hand cards per round**, any time the round is live (numbers 1–4, or effects like Drink Me). Hand cards are never greyed out: a third play just tells you the limit. The count resets every round.
+  - **Heal** (**E**): +3 HP, always available. It uses one of your 2 card plays.
+  - **Ready**: the round ends **right away**. The enemy plays out the rest of its turn instantly, then totals are compared.
+- **Busting doesn't end your turn.** Over 21 you can keep playing cards (like Drink Me) to get back under. But reaching **30** is a **super bust**: the round ends on the spot and you take double damage.
 - The enemy plays on its own clock. Its **intent bar** starts empty every round and fills toward one surprise attack (7.5 s in for soldiers, 6.5 s for the Queen). In the last 2 seconds before one lands, the enemy flashes red with a **!** and a warning beep plays. You never see the attack's name, only what it did to you.
-- Closer to 21 wins: the loser takes the difference plus the winner's base attack. Exactly 21 is a critical (×2). Busting costs you `total − 21` plus the enemy's attack.
+- Closer to 21 wins: the loser takes the difference plus the winner's base attack. Exactly 21 is a critical (×2). Busting costs you `total − 21` plus the enemy's attack (×2 on a super bust).
 
 ## Design
 
@@ -49,11 +51,11 @@ Every character has an **idle** loop (left) and an **action** (right). The actio
 Only her hands and lavender sleeves are visible. **Why:** the hands are the player's body language. They drum while you think, tap to hit, wave off to stay, and pump a fist on 21. Lavender instead of the famous blue keeps her ours.
 
 #### Card soldiers
-| Spade: Dig | Club: Bonk | Diamond: Pilfer | Heart: Off with it |
+| Spade: +1 to your total | Club: +2 to your total | Diamond: −5 off your total | Heart: removes your last card |
 | --- | --- | --- | --- |
 | ![](docs/gifs/soldier_spade.gif) | ![](docs/gifs/soldier_club.gif) | ![](docs/gifs/soldier_diamond.gif) | ![](docs/gifs/soldier_heart.gif) |
 
-One shared body (a playing card with arms, a suit helmet and a halberd) with four attacks. **Why:** one base sprite recoloured four times saves art time, and each suit's attack teaches one mechanic before the boss combines them.
+One shared body (a playing card with arms, a suit helmet and a halberd) with four attacks. (The GIFs are the original mockups; Dig and Pilfer now belong to the Queen.) **Why:** one base sprite recoloured four times saves art time, and each suit's attack teaches one mechanic before the boss combines them.
 
 #### Cheshire Cat (Act 2 boss)
 ![Cheshire Cat](docs/gifs/cheshire_cat.gif)
@@ -213,7 +215,7 @@ Stretch extras: `DELETE /run/{id}` with an `X-Admin-Key` header, and `GET /board
 1. Install [Godot 4.7](https://godotengine.org/download) (standard build, not .NET).
 2. Open `game/project.godot` and press **F5**. Any scene also runs on its own with **F6**.
 3. Controls:
-   - **H** hit, **Space** ready (or **S**), **1–5** play a hand card, **M** mute
+   - **H** hit, **Space** ready (or **S**), **E** heal, **1–5** play a hand card, **M** mute
    - debug builds only: **F1** overlay, **F2** instant win, **F3** print seed
 4. The game talks to the API at `http://127.0.0.1:8000` by default. To point it elsewhere, run `godot --path game -- --api=https://...`, or edit `cardclash/api/base_url` in Project Settings. Offline, everything still works except the leaderboard and the daily run.
 
