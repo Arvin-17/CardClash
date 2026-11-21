@@ -7,8 +7,8 @@ extends Node
 ##                |    v   intent bar fills
 ##               SURPRISE
 ##
-## Rounds are real-time inside a 15 s window but resolve in fixed steps, so they stay
-## fair and testable. Logic changes state first, then emits on Events. The UI only
+## Rounds are real-time inside a short window (round.seconds) but resolve in fixed steps,
+## so they stay fair and testable. A round ends early the moment both sides have stayed. Logic changes state first, then emits on Events. The UI only
 ## calls hit()/stay()/play() and listens; it never changes game state itself.
 
 enum State { DEAL, ROUND_ACTIVE, SURPRISE, RESOLVE, BATTLE_END }
@@ -87,7 +87,7 @@ func _process(_delta: float) -> void:
 # --- player input (requests; the controller decides) -------------------------
 
 func hit() -> void:
-	if not _can_act():
+	if not can_act():
 		return
 	battle.player_hit()
 	if battle.player.is_bust(battle.target):
@@ -96,7 +96,7 @@ func hit() -> void:
 
 
 func stay() -> void:
-	if not _can_act():
+	if not can_act():
 		return
 	battle.player_stay()
 	Events.message.emit("READY ON %d." % battle.player.total(battle.target))
@@ -105,8 +105,10 @@ func stay() -> void:
 	_check_round_end()
 
 
+## Hand cards work whenever a round is live (even after Ready or mid-attack). BattleState
+## enforces the per-round limit.
 func play(index: int, choice: Dictionary = {}) -> bool:
-	if not _can_act() or not battle.play_card(index, choice):
+	if not round_live() or not battle.play_card(index, choice):
 		return false
 	_check_round_end()
 	return true
@@ -120,17 +122,32 @@ func debug_win() -> void:
 	_end()
 
 
-func _can_act() -> bool:
-	return battle != null and state == State.ROUND_ACTIVE and not battle.player.stayed
+## A round is in progress: its main phase or a surprise attack's pause.
+func round_live() -> bool:
+	return battle != null and (state == State.ROUND_ACTIVE or state == State.SURPRISE)
+
+
+## Hit and Ready: any time the round is live, until you ready up or bust.
+func can_act() -> bool:
+	return round_live() and not battle.player.stayed
+
+
+## Every phase change goes out on Events, so the UI never sits on a stale screen
+## (e.g. the hand and READY button after a surprise attack's pause).
+func _set_state(next: State) -> void:
+	if state == next:
+		return
+	state = next
+	Events.battle_phase_changed.emit(next)
 
 
 # --- states -------------------------------------------------------------------
 
 func _deal() -> void:
-	state = State.DEAL
+	_set_state(State.DEAL)
 	battle.start_round()
 	Events.round_started.emit(battle.round_number)
-	state = State.ROUND_ACTIVE
+	_set_state(State.ROUND_ACTIVE)
 	_ai_wait_ticks = _reaction_ticks()
 	_freezes = 0
 	round_timer.paused = false
@@ -187,14 +204,14 @@ func _on_round_timeout() -> void:
 func _on_intent_full() -> void:
 	if state != State.ROUND_ACTIVE:
 		return
-	state = State.SURPRISE
+	_set_state(State.SURPRISE)
 	round_timer.paused = true
 	ai_timer.paused = true
 	battle.fire_surprise()
 	await _wait(float(GameData.rule("surprise.pause_seconds", 1.0)))
 	if state != State.SURPRISE:
 		return
-	state = State.ROUND_ACTIVE
+	_set_state(State.ROUND_ACTIVE)
 	round_timer.paused = _freezes > 0
 	ai_timer.paused = false
 	intent_timer.start()
@@ -226,7 +243,7 @@ func _check_round_end() -> void:
 
 
 func _resolve() -> void:
-	state = State.RESOLVE
+	_set_state(State.RESOLVE)
 	round_timer.stop()
 	ai_timer.stop()
 	intent_timer.paused = true
@@ -243,7 +260,7 @@ func _resolve() -> void:
 
 
 func _end() -> void:
-	state = State.BATTLE_END
+	_set_state(State.BATTLE_END)
 	round_timer.stop()
 	ai_timer.stop()
 	intent_timer.stop()
