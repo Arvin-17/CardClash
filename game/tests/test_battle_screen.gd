@@ -93,3 +93,24 @@ func test_hand_cards_can_be_played_after_ready() -> void:
 		return
 	assert_true(_c.play(index), "ready only stops drawing")
 	assert_eq(b.cards_played, 1)
+
+
+func test_attack_bar_starts_empty_every_round() -> void:
+	await _start()
+	await wait_seconds(0.6)
+	assert_lt(_c.intent_timer.time_left, _c.intent_timer.wait_time - 0.4, "the bar has been filling")
+	_c.battle.enemy_stay()
+	_c.stay()
+	await wait_seconds(float(GameData.rule("round.resolve_pause_seconds", 1.0)) + 0.2)
+	assert_eq(_c.battle.round_number, 2)
+	assert_eq(_c.state, BattleController.State.ROUND_ACTIVE)
+	assert_almost_eq(_c.intent_timer.time_left, _c.intent_timer.wait_time, 0.3, "empty again at the new round")
+
+
+func test_only_one_attack_per_round() -> void:
+	await _start()
+	_c.battle.shield = 1
+	_c._on_intent_full()
+	await wait_seconds(_pause())
+	assert_eq(_c.state, BattleController.State.ROUND_ACTIVE)
+	assert_true(_c.intent_timer.is_stopped(), "no second attack this round")

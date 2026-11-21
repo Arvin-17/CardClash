@@ -230,6 +230,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _on_round_started(n: int) -> void:
 	_round.text = "ROUND %d" % n
+	_clear_warning()  # the attack bar starts empty every round
 	_message.text = ""
 	_peek.text = ""
 	_refresh()

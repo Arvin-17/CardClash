@@ -73,7 +73,7 @@ func _process(_delta: float) -> void:
 		return
 	if state == State.ROUND_ACTIVE or state == State.SURPRISE:
 		Events.timer_changed.emit(round_timer.time_left)
-	var intent := 1.0 - intent_timer.time_left / maxf(intent_timer.wait_time, 0.01)
+	var intent := 0.0 if intent_timer.is_stopped() else 1.0 - intent_timer.time_left / maxf(intent_timer.wait_time, 0.01)
 	if absf(intent - _last_intent) >= 0.01:
 		_last_intent = intent
 		Events.intent_changed.emit(battle.enemy_id(), clampf(intent, 0.0, 1.0))
@@ -153,9 +153,11 @@ func _deal() -> void:
 	round_timer.paused = false
 	round_timer.start(float(GameData.rule("round.seconds", 15)))
 	ai_timer.start()
-	if intent_timer.is_stopped():
-		intent_timer.start()
+	# The attack bar starts empty every round and can fire once per round.
+	intent_timer.wait_time = battle.intent_seconds()
 	intent_timer.paused = false
+	intent_timer.start()
+	_warned = false
 
 
 ## Base AI every 0.5 s tick, after a 1-2 s reaction delay so it feels like it's thinking.
@@ -214,8 +216,8 @@ func _on_intent_full() -> void:
 	_set_state(State.ROUND_ACTIVE)
 	round_timer.paused = _freezes > 0
 	ai_timer.paused = false
-	intent_timer.start()
-	_warned = false
+	# One attack per round: the bar stays empty until the next round starts.
+	intent_timer.stop()
 	_check_round_end()
 
 
@@ -246,7 +248,7 @@ func _resolve() -> void:
 	_set_state(State.RESOLVE)
 	round_timer.stop()
 	ai_timer.stop()
-	intent_timer.paused = true
+	intent_timer.stop()
 	var result := battle.resolve_round()
 	if _autoplay:
 		Autoplay.log_line("round %d: %s, %s takes %d (you %d vs %d) HP %d/%d" % [
