@@ -28,6 +28,11 @@ var _overlay_title: Label
 var _overlay_button: Button
 var _overlay_detail: Label
 var _portrait: TextureRect
+var _alert: Label
+var _flash_rect: ColorRect
+## An attack is about to land (telegraphed, never named).
+var _warning: bool = false
+var _blink_t: float = 0.0
 var _flags: Label
 var _debug: Label
 var _chooser: PanelContainer
@@ -48,7 +53,8 @@ func _ready() -> void:
 	Events.intent_changed.connect(_on_intent_changed)
 	Events.peeked.connect(_on_peeked)
 	Events.surprise_attack.connect(_on_surprise)
-	Events.surprise_blocked.connect(func(_id: String, kind: String) -> void: _flash("BLOCKED %s!" % kind.to_upper().replace("_", " ")))
+	Events.surprise_blocked.connect(_on_blocked)
+	Events.attack_incoming.connect(_on_attack_incoming)
 	Events.round_resolved.connect(_on_round_resolved)
 	Events.boss_phase_changed.connect(func(_phase: int) -> void: _set_portrait(true))
 	Events.battle_started.connect(func(_id: String) -> void: _set_portrait(false))
@@ -91,13 +97,17 @@ func _build() -> void:
 	var intent_bg := ColorRect.new()
 	intent_bg.color = Palette.GREEN
 	intent_bg.position = Vector2(216, 75)
-	intent_bg.size = Vector2(INTENT_W, 3)
+	intent_bg.size = Vector2(INTENT_W, 4)
 	add_child(intent_bg)
 	_intent_bar = ColorRect.new()
 	_intent_bar.color = Palette.RED
 	_intent_bar.position = intent_bg.position
-	_intent_bar.size = Vector2(0, 3)
+	_intent_bar.size = Vector2(0, 4)
 	add_child(_intent_bar)
+	_alert = Palette.label("!", Palette.RED, true)
+	_alert.position = Vector2(200, 30)
+	_alert.visible = false
+	add_child(_alert)
 	_enemy_name = _label(Vector2(100, 22), "", Palette.CREAM)
 	_enemy_hp = _label(Vector2(100, 32), "", Palette.RED)
 	_enemy_attack = _label(Vector2(272, 22), "", Palette.GREEN)
@@ -120,7 +130,13 @@ func _build() -> void:
 	_debug = _label(Vector2(6, 16), "", Palette.CREAM)
 	_debug.visible = false
 	_hit = _button(Vector2(330, 236), "HIT [H]", controller.hit)
-	_stay = _button(Vector2(400, 236), "STAY [S]", controller.stay)
+	_stay = _button(Vector2(400, 236), "READY [SPC]", controller.stay)
+
+	_flash_rect = ColorRect.new()
+	_flash_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_flash_rect.color = Color(Palette.RED, 0.0)
+	_flash_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_flash_rect)
 
 	_overlay = Panel.new()
 	_overlay.add_theme_stylebox_override("panel", Palette.box(Palette.BLACK, Palette.CREAM))
@@ -190,7 +206,12 @@ func _unhandled_input(event: InputEvent) -> void:
 				_request_play(key.keycode - KEY_1)
 		KEY_ESCAPE:
 			_close_chooser()
-		KEY_ENTER, KEY_SPACE:
+		KEY_SPACE:
+			if _overlay.visible:
+				_on_continue()
+			else:
+				controller.stay()
+		KEY_ENTER:
 			if _overlay.visible:
 				_on_continue()
 		KEY_F1:
@@ -225,7 +246,8 @@ func _refresh() -> void:
 	var pt := b.player.total(b.target)
 	_player_total.text = "= %d%s" % [pt, "  BUST" if pt > b.target else ""]
 	_player_total.add_theme_color_override("font_color", Palette.RED if pt > b.target else Palette.CREAM)
-	_plays.text = "PLAYS LEFT %d   DECK %d" % [b.plays_left, b.player_deck.count() if b.player_deck else 0]
+	var deck_text := "DECK %d" % (b.player_deck.count() if b.player_deck else 0)
+	_plays.text = deck_text if b.plays_left < 0 else "PLAYS LEFT %d   %s" % [b.plays_left, deck_text]
 	_counts.text = _count_text(b.hit_deck)
 	var flags: Array[String] = []
 	if b.shield > 0:
@@ -376,8 +398,51 @@ func _on_peeked(card: Card) -> void:
 		_peek.text = "NEXT: %s%s" % [card.face(), Palette.SUIT_GLYPH.get(card.suit, "")]
 
 
-func _on_surprise(_enemy_id: String, kind: String) -> void:
-	_flash(kind.to_upper().replace("_", " ") + "!")
+func _on_attack_incoming(_enemy_id: String) -> void:
+	_warning = true
+	_blink_t = 0.0
+
+
+## The attack lands: shake, flash red, and say what it did, never what it's called.
+func _on_surprise(_enemy_id: String, _kind: String) -> void:
+	_clear_warning()
+	var what := _message.text
+	_message.text = "THE ENEMY STRIKES!" + (" " + what if not what.is_empty() else "")
+	_flash("")
+	_shake()
+
+
+func _on_blocked(_enemy_id: String, _kind: String) -> void:
+	_clear_warning()
+	_message.text = "ATTACK BLOCKED!"
+	_flash("")
+
+
+func _clear_warning() -> void:
+	_warning = false
+	_alert.visible = false
+	_portrait.modulate = Color.WHITE
+	_intent_bar.color = Palette.RED
+
+
+func _shake() -> void:
+	_flash_rect.color = Color(Palette.RED, 0.35)
+	var fade := create_tween()
+	fade.tween_property(_flash_rect, "color:a", 0.0, 0.35)
+	var shake := create_tween()
+	for offset: Vector2 in [Vector2(3, 0), Vector2(-3, 1), Vector2(2, -1), Vector2(-1, 0), Vector2.ZERO]:
+		shake.tween_property(self, "position", offset, 0.04)
+
+
+## While an attack is incoming: the enemy blinks red, a big "!" flashes and the bar pulses.
+func _process(delta: float) -> void:
+	if not _warning:
+		return
+	_blink_t += delta
+	var on := int(_blink_t / 0.15) % 2 == 0
+	_alert.visible = on
+	_portrait.modulate = Color(1.0, 0.45, 0.45) if on else Color.WHITE
+	_intent_bar.color = Palette.CREAM if on else Palette.RED
 
 
 func _flash(text: String) -> void:
@@ -406,6 +471,7 @@ func _on_round_resolved(r: Dictionary) -> void:
 
 
 func _show_end(won: bool) -> void:
+	_clear_warning()
 	_overlay_title.text = "VICTORY!" if won else "OFF WITH HER HEAD!"
 	_overlay_title.add_theme_color_override("font_color", Palette.CREAM if won else Palette.RED)
 	_overlay_detail.text = "GOLD %d   HP %d/%d" % [RunState.gold, RunState.hp, RunState.max_hp] if won else ""
