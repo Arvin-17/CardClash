@@ -31,8 +31,10 @@ var hand: Array[Card] = []
 ## Cards the Diamond Soldier pilfered; gone for the rest of this battle.
 var stolen: Array[Card] = []
 var round_number: int = 0
-## Hand plays left this round; -1 means no limit (plays_per_round <= 0 in rules.json).
-var plays_left: int = 0
+## Hand cards played this round. start_round() sets it back to 0, so every round starts fresh.
+var cards_played: int = 0
+## Most hand cards per round (rules.json round.plays_per_round); 0 means no limit.
+var plays_per_round: int = 0
 var enemy_stay_at: int = 17
 var enemy_risk: float = 0.0
 var surprise_count: int = 0
@@ -103,8 +105,8 @@ func start_round() -> void:
 	crit_boost = false
 	peeked_card = null
 	hits_this_round = 0
-	var per_round := int(round_rule("plays_per_round", 0))
-	plays_left = per_round if per_round > 0 else -1
+	plays_per_round = int(round_rule("plays_per_round", 2))
+	cards_played = 0
 	for _i in int(round_rule("blind_cards_dealt", 2)):
 		_deal(player)
 		_deal(enemy)
@@ -172,13 +174,21 @@ func player_hit() -> Card:
 	return card
 
 
-## Ready (the guide's "stay"): lock your total for this round. Surprise attacks can still hit you.
+## Ready (the guide's "stay"): you're done drawing this round. Hand cards can still be played
+## (within the per-round limit) until the round ends, and surprise attacks can still hit you.
 func player_stay() -> void:
 	player.stayed = true
 
 
+## Used up this round's hand plays?
+func at_play_limit() -> bool:
+	return plays_per_round > 0 and cards_played >= plays_per_round
+
+
+## The only things that stop a hand card: the per-round limit, or the card's own condition
+## (e.g. Drink Me needs a card on the table). Whether a round is in progress is the controller's call.
 func can_play(index: int) -> bool:
-	if player.stayed or plays_left == 0 or index < 0 or index >= hand.size():
+	if at_play_limit() or index < 0 or index >= hand.size():
 		return false
 	var effect := EffectRegistry.card_effect(hand[index].effect_name())
 	return effect != null and effect.can_play(self, params_for(hand[index]))
@@ -190,8 +200,7 @@ func play_card(index: int, choice: Dictionary = {}) -> bool:
 		return false
 	var card: Card = hand[index]
 	hand.remove_at(index)
-	if plays_left > 0:
-		plays_left -= 1
+	cards_played += 1
 	var params := params_for(card)
 	params.merge(choice, true)
 	params["_card"] = card

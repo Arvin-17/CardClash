@@ -30,7 +30,7 @@ static func battle(enemy_id: String = "club_soldier", deck_ids: Array = [], hand
 	var defs := card_defs()
 	for id: String in hand_ids:
 		b.hand.append(Card.from_def(defs[id]))
-	b.plays_left = -1  # rules.json: plays_per_round 0 = no limit
+	b.plays_per_round = 0  # no limit unless a test sets one; start_round() loads the real rule
 	return b
 
 
