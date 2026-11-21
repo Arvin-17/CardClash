@@ -47,10 +47,15 @@ jobs:
           mkdir -p addons
           cp -r "/tmp/Gut-${GUT_VERSION}/addons/gut" addons/gut
 
-      - name: Import project (fails on script parse errors)
+      - name: Import project
+        # A fresh checkout has no .godot/ cache yet, so the custom theme's font can't load
+        # until this first import finishes; its startup errors are expected and ignored.
+        run: godot --headless --import > /tmp/import-first.log 2>&1 || true
+
+      - name: Check that every script and resource loads (second import pass)
         run: |
           godot --headless --import 2>&1 | tee /tmp/import.log
-          if grep -E "SCRIPT ERROR|Parse Error|Failed to load script|Failed loading resource" /tmp/import.log; then exit 1; fi
+          if grep -E "SCRIPT ERROR|Parse Error|Failed to load script|Failed loading resource|No loader found" /tmp/import.log; then exit 1; fi
 
       - name: Unit tests (GUT)
         run: godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
