@@ -34,11 +34,13 @@ func test_round_draws_the_hand_up_to_three() -> void:
 	var b := TestHelpers.battle("club_soldier", STARTER)
 	b.start_round()
 	assert_eq(b.hand.size(), 3)
-	assert_eq(b.plays_left, -1, "plays_per_round 0 means no limit")
+	assert_eq(b.plays_per_round, 2, "rules.json: 2 hand cards per round")
+	assert_eq(b.cards_played, 0)
 
 
-func test_play_cards_at_will_when_there_is_no_limit() -> void:
+func test_a_limit_of_zero_means_no_limit() -> void:
 	var b := TestHelpers.battle("club_soldier", [], ["num_1", "num_1", "num_1", "num_2"])
+	b.plays_per_round = 0
 	TestHelpers.set_table(b.player, ["5", "4"])
 	for _i in 4:
 		assert_true(b.play_card(0))
@@ -55,22 +57,30 @@ func test_unplayed_cards_carry_over_and_the_hand_caps_at_five() -> void:
 	assert_eq(b.hand.size(), 5, "never more than 5")
 
 
-func test_a_configured_play_limit_still_works() -> void:
-	var b := TestHelpers.battle("club_soldier", [], ["num_1", "num_1", "num_1"])
-	b.plays_left = 2
+func test_two_hand_cards_per_round_and_the_next_round_resets_the_count() -> void:
+	var b := TestHelpers.battle("club_soldier", ["num_1", "num_1", "num_1", "num_1", "num_1", "num_1"])
+	b.start_round()
 	TestHelpers.set_table(b.player, ["5", "4"])
 	assert_true(b.play_card(0))
 	assert_true(b.play_card(0))
-	assert_false(b.can_play(0), "plays_left is 0")
+	assert_eq(b.cards_played, 2)
+	assert_true(b.at_play_limit())
+	assert_false(b.can_play(0), "a third card in one round is refused")
 	assert_false(b.play_card(0))
-	assert_eq(b.hand.size(), 1)
+	assert_eq(b.hand.size(), 1, "the refused card stays in your hand")
+	b.start_round()
+	assert_eq(b.cards_played, 0, "a new round resets the counter")
+	assert_false(b.at_play_limit())
+	assert_true(b.can_play(0))
 
 
-func test_no_plays_after_staying() -> void:
+func test_hand_cards_still_play_after_ready() -> void:
 	var b := TestHelpers.battle("club_soldier", [], ["num_2"])
 	TestHelpers.set_table(b.player, ["5", "4"])
 	b.player_stay()
-	assert_false(b.can_play(0))
+	assert_true(b.can_play(0), "ready only stops drawing")
+	assert_true(b.play_card(0))
+	assert_eq(b.player.total(), 11)
 
 
 func test_number_card_adds_to_your_total_and_stays_on_the_table() -> void:

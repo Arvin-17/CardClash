@@ -4,6 +4,8 @@ extends Node
 
 signal battle_started(enemy_id: String)
 signal round_started(round_number: int)
+## The battle moved between phases (BattleController.State: deal, round, surprise, resolve, end).
+signal battle_phase_changed(phase: int)
 signal card_dealt(who: String, card: Card)
 signal card_removed(who: String, card: Card)
 signal card_played(card: Card)

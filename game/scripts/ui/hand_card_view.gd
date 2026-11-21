@@ -1,7 +1,8 @@
 class_name HandCardView
 extends Button
 ## A built-deck card in Alice's hand. Placeholder art: a cream card with the card's
-## name, plus its value or a short effect line. Greyed out when it can't be played.
+## name, plus its value or a short effect line. Never greyed out: it is always clickable,
+## and the battle decides whether the play goes through (and says why when it doesn't).
 
 const CARD_SIZE := Vector2(52, 34)
 
@@ -33,15 +34,14 @@ func _init() -> void:
 	add_child(_icon)
 
 
-func show_card(c: Card, i: int, playable: bool) -> void:
+func show_card(c: Card, i: int) -> void:
 	card = c
 	index = i
-	disabled = not playable
+	disabled = false
 	var rare := str(c.def.get("rarity", "")) == "rare"
 	add_theme_stylebox_override("normal", Palette.box(Palette.CREAM, Palette.RED if rare else Palette.BLACK))
 	add_theme_stylebox_override("hover", Palette.box(Palette.CREAM, Palette.RED, 2))
 	add_theme_stylebox_override("pressed", Palette.box(Palette.RED, Palette.BLACK))
-	add_theme_stylebox_override("disabled", Palette.box(Palette.GREEN, Palette.BLACK))
 	_name.text = "%d %s" % [i + 1, c.display_name().to_upper()]
 	_name.add_theme_color_override("font_color", Palette.BLACK)
 	if c.is_number():
