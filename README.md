@@ -1,6 +1,6 @@
 # CardClash
 
-CardClash is a pixel-art card battler built for a Wonderland-themed hackathon. You fall into a deck of cards and fight through waves of card-soldier enemies in fast blackjack rounds. Hit, play special cards from your hand whenever you like, and hit READY when you are happy with your total. Whoever ends closer to 21 deals the damage. Enemies can strike before, during, or after your turn. It has a retro look.
+CardClash is a pixel-art card battler built for a Wonderland-themed hackathon. You fall into a deck of cards and fight through waves of card-soldier enemies in fast blackjack rounds. Hit, play up to 2 special cards a round from your hand whenever you like, and hit READY when you are happy with your total. Whoever ends closer to 21 deals the damage. Enemies can strike before, during, or after your turn. It has a retro look.
 
 Win the run and the Queen of Hearts loses her head; lose, and Alice does.
 
@@ -9,8 +9,8 @@ Win the run and the Queen of Hearts loses her head; lose, and Alice does.
 - Each round, you and the enemy get 2 cards from the shared **blind deck** (a standard 52). Your hand draws up to 3 cards from your own **built deck**.
 - You have 10 seconds:
   - **Hit**: draw a blind card.
-  - **Play**: play any of your hand cards, as many as you like, whenever you like (numbers 1–4, or effects like Drink Me).
-  - **Ready**: lock your total. The enemy stops stalling and finishes its turn right away.
+  - **Play**: play up to **2 hand cards per round**, any time the round is live, even after Ready (numbers 1–4, or effects like Drink Me). Hand cards are never greyed out: a third play just tells you the limit. The count resets every round.
+  - **Ready**: you're done drawing. The enemy stops stalling, and the round ends **the moment you've both stayed**, without waiting for the timer.
 - The enemy plays on its own clock. Its **intent bar** fills toward a surprise attack. In the last 2 seconds before one lands, the enemy flashes red with a **!** and a warning beep plays. You never see the attack's name, only what it did to you.
 - Closer to 21 wins: the loser takes the difference plus the winner's base attack. Exactly 21 is a critical (×2). Busting costs you `total − 21` plus the enemy's attack.
 
