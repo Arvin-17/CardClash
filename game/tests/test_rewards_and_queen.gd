@@ -51,7 +51,9 @@ func test_off_with_its_head_takes_your_highest_card() -> void:
 
 func test_queen_enrages_below_half_hp() -> void:
 	var b := TestHelpers.battle("queen_of_hearts")
-	assert_eq(b.intent_seconds(), 6.0)
+	var calm := float(TestHelpers.enemy("queen_of_hearts")["intent_seconds"])
+	var rage := float(TestHelpers.enemy("queen_of_hearts")["rage"]["intent_seconds"])
+	assert_eq(b.intent_seconds(), calm)
 	assert_eq(b.enemy_stay_at, 18)
 	watch_signals(b)
 	b.enemy.hp = 31
@@ -63,7 +65,8 @@ func test_queen_enrages_below_half_hp() -> void:
 	b.resolve_round()
 	assert_eq(b.phase, 2)
 	assert_eq(b.enemy_stay_at, 19)
-	assert_eq(b.intent_seconds(), 4.0)
+	assert_eq(b.intent_seconds(), rage)
+	assert_lt(rage, calm, "enraged, she attacks sooner in each round")
 	assert_signal_emitted_with_parameters(b, "boss_phase_changed", [2])
 
 
