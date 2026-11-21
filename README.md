@@ -67,8 +67,11 @@ Stretch extras: `DELETE /run/{id}` with an `X-Admin-Key` header, and `GET /board
 ## Run the game
 
 1. Install [Godot 4.7](https://godotengine.org/download) (standard build, not .NET).
-2. Open `game/project.godot` and press **F5**.
-3. Controls: **H** hit, **S** stay.
+2. Open `game/project.godot` and press **F5**. Any scene also runs on its own with **F6**.
+3. Controls:
+   - **H** hit, **S** stay, **1–5** play a hand card, **M** mute
+   - debug builds only: **F1** overlay, **F2** instant win, **F3** print seed
+4. The game talks to the API at `http://127.0.0.1:8000` by default. To point it elsewhere, run `godot --path game -- --api=https://...`, or edit `cardclash/api/base_url` in Project Settings. Offline, everything still works except the leaderboard and the daily run.
 
 Unit tests use [GUT](https://github.com/bitwes/Gut). Install **GUT 9.7.1** from the Asset Library (it lands in `game/addons/gut`, which git ignores), then:
 
@@ -76,8 +79,44 @@ Unit tests use [GUT](https://github.com/bitwes/Gut). Install **GUT 9.7.1** from 
 cd game
 godot --headless --import
 godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://tests -gexit
+godot --headless --fixed-fps 60 -- --autoplay    # a bot plays a whole run
 ```
 
-CI does the same on every pull request (`.github/workflows/game.yml`).
+CI does all of this on every pull request (`.github/workflows/game.yml`). `test_balance` also prints a balance report (rounds per fight, win and bust rates) to compare with the targets.
 
-Placeholder fonts come from `python3 tools/export_art.py`.
+Placeholder art, fonts and sounds come from `python3 tools/export_art.py`. The designer's files replace them at the same paths.
+
+## How the game is built
+
+- **Logic never depends on art.**
+  - `scripts/core` holds plain classes with no scene code: `Card`, `Rules`, `HitDeck`, `PlayerDeck`, `BattleState`.
+  - `BattleController` drives them in real time (Timer nodes for the round, the AI tick and the intent bar) and re-emits every change on the `Events` bus.
+  - The UI and `Audio` only listen.
+- **All numbers live in `game/data`.** Balancing is editing JSON.
+- **One seeded RNG** (`Rng`). Same seed, same run: needed for the daily run and bug reports.
+- **Cards are data plus one small script.** `effect` names map to `scripts/effects/<name>.gd`, and enemy surprise attacks to `scripts/effects/enemy/<name>.gd`.
+- **`Api`** is the only thing that touches the network. It fails silently, and scenes pass callbacks so leaving a screen mid-request is safe.
+
+## Deploy
+
+**API → Render** (`render.yaml`):
+1. In Render, choose **New → Blueprint** and pick this repo. You get the `cardclash-api` web service and a free Postgres database. On a free host SQLite can reset on redeploy, so Postgres is used here; locally it stays SQLite.
+2. Set `ALLOWED_ORIGINS` to the game's origin. itch.io serves web games from `https://html-classic.itch.zone`.
+3. Open `https://<service>.onrender.com/docs` to check it.
+
+**Web build → itch.io:**
+1. In Godot: **Project → Export → Web → Export Project** (this needs the 4.7.2 export templates).
+   - The preset ships the data JSON and leaves out tests and GUT.
+   - Threads are off, so itch.io needs no SharedArrayBuffer headers.
+   - The web build calls `cardclash/api/base_url.web`. Change it if your Render URL differs.
+2. Zip `game/build/web/` and upload it to itch.io as an HTML game.
+
+**Desktop backup:** the **Windows Desktop** and **Linux** presets build a single-file game. Keep one on a USB stick.
+
+### Demo-day checklist
+
+- [ ] Open `/health` a few minutes before judging. Free servers sleep and take 30+ s to wake.
+- [ ] Have a local backup server ready: `cd server && uvicorn app.main:app`, and run the game with `-- --api=http://127.0.0.1:8000`.
+- [ ] Remember the game is fully playable offline: a dead Wi-Fi only costs the leaderboard.
+- [ ] Put `GET /board` on a second screen as a live leaderboard.
+- [ ] Use `DELETE /run/{id}` with `X-Admin-Key` to remove junk entries (the key is in Render's env vars).
