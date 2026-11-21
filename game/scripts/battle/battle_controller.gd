@@ -18,6 +18,8 @@ var battle: BattleState
 var _ai_wait_ticks: int = 0
 var _freezes: int = 0
 var _last_intent: float = -1.0
+## True once this intent cycle's "attack incoming" warning has gone out.
+var _warned: bool = false
 var _autoplay: bool = false
 ## Launched on its own (F6 / smoke run) rather than from the run map.
 var _standalone: bool = false
@@ -75,6 +77,11 @@ func _process(_delta: float) -> void:
 	if absf(intent - _last_intent) >= 0.01:
 		_last_intent = intent
 		Events.intent_changed.emit(battle.enemy_id(), clampf(intent, 0.0, 1.0))
+	# Telegraph: warn in the last few seconds before the intent bar fills (never naming the attack).
+	if not _warned and state == State.ROUND_ACTIVE and not intent_timer.is_stopped() \
+			and intent_timer.time_left <= float(GameData.rule("surprise.warn_seconds", 2.0)):
+		_warned = true
+		Events.attack_incoming.emit(battle.enemy_id())
 
 
 # --- player input (requests; the controller decides) -------------------------
@@ -92,7 +99,9 @@ func stay() -> void:
 	if not _can_act():
 		return
 	battle.player_stay()
-	Events.message.emit("You stay on %d." % battle.player.total(battle.target))
+	Events.message.emit("READY ON %d." % battle.player.total(battle.target))
+	if _hurry():
+		_ai_wait_ticks = 0
 	_check_round_end()
 
 
@@ -148,8 +157,13 @@ func _on_ai_tick() -> void:
 	elif decision == EnemyAI.STAY:
 		battle.enemy_stay()
 		Events.message.emit("%s stays." % battle.enemy.display_name)
-	_ai_wait_ticks = _reaction_ticks()
+	_ai_wait_ticks = 0 if _hurry() else _reaction_ticks()
 	_check_round_end()
+
+
+## Once Alice is ready, the enemy stops "thinking" and finishes on every tick.
+func _hurry() -> bool:
+	return battle.player.stayed and bool(GameData.rule("ai.hurry_when_player_ready", true))
 
 
 func _reaction_ticks() -> int:
@@ -164,7 +178,7 @@ func _on_round_timeout() -> void:
 	if state != State.ROUND_ACTIVE:
 		return
 	if not battle.player.stayed:
-		Events.message.emit("TIME! You stay on %d." % battle.player.total(battle.target))
+		Events.message.emit("TIME! READY ON %d." % battle.player.total(battle.target))
 	battle.force_stay()
 	_check_round_end()
 
@@ -184,6 +198,7 @@ func _on_intent_full() -> void:
 	round_timer.paused = _freezes > 0
 	ai_timer.paused = false
 	intent_timer.start()
+	_warned = false
 	_check_round_end()
 
 

@@ -12,6 +12,8 @@ signal hand_changed()
 signal hp_changed(who: String, hp: int, max_hp: int)
 signal timer_changed(seconds_left: float)
 signal intent_changed(enemy_id: String, percent: float)
+## The intent bar is about to fill: an attack is coming (which one is never revealed).
+signal attack_incoming(enemy_id: String)
 signal surprise_attack(enemy_id: String, kind: String)
 signal surprise_blocked(enemy_id: String, kind: String)
 signal peeked(card: Card)
