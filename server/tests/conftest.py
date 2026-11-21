@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 
 from app.config import Settings
 from app.db import utc_today
+from app.limits import limiter
 from app.main import create_app
 
 TODAY = dt.date(2026, 11, 21)
@@ -30,8 +31,17 @@ def app(settings: Settings, day: dict):
 
 @pytest.fixture
 def client(app) -> TestClient:
+    limiter.reset()  # rate-limit counters are per process; isolate tests
     with TestClient(app) as c:
         yield c
+
+
+@pytest.fixture
+def no_rate_limit():
+    """For tests that need to post lots of runs from one IP."""
+    limiter.enabled = False
+    yield
+    limiter.enabled = True
 
 
 def make_run(**over) -> dict:
