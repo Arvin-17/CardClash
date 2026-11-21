@@ -14,6 +14,9 @@ func _ready() -> void:
 	_center(Palette.label("SPOILS OF THE COURT", Palette.RED, true), 14)
 	_center(Palette.label("GOLD %d   HP %d/%d   DECK %d" % [RunState.gold, RunState.hp, RunState.max_hp, RunState.deck.size()], Palette.GREEN), 36)
 	_center(Palette.label("TAKE ONE CARD [1-3], REMOVE A CARD [R] OR SKIP [K]", Palette.CREAM), 50)
+	if not RunState.last_trinket.is_empty():
+		var t: Dictionary = GameData.trinkets.get(RunState.last_trinket, {})
+		_center(Palette.label("TRINKET FOUND: %s - %s" % [str(t.get("name", "")).to_upper(), str(t.get("text", "")).to_upper()], Palette.RED), 254)
 
 	_offer = Rewards.roll(GameData.cards, GameData.rule("run.rarity_weights", {}), int(GameData.rule("run.reward_choices", 3)), Rng.rng)
 	for i in _offer.size():

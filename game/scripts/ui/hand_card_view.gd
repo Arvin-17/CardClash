@@ -9,6 +9,7 @@ var card: Card
 var index: int = -1
 var _name: Label
 var _detail: Label
+var _icon: TextureRect
 
 
 func _init() -> void:
@@ -25,6 +26,11 @@ func _init() -> void:
 	_detail.position = Vector2(3, CARD_SIZE.y - 10)
 	_detail.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_detail)
+	_icon = TextureRect.new()
+	_icon.position = Vector2(CARD_SIZE.x - 17, CARD_SIZE.y - 17)
+	_icon.size = Vector2(16, 16)
+	_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_icon)
 
 
 func show_card(c: Card, i: int, playable: bool) -> void:
@@ -43,6 +49,8 @@ func show_card(c: Card, i: int, playable: bool) -> void:
 	else:
 		_detail.text = _short(c)
 	_detail.add_theme_color_override("font_color", Palette.RED)
+	var art := "res://art/" + str(c.def.get("art", ""))
+	_icon.texture = load(art) if not c.is_number() and ResourceLoader.exists(art) else null
 	tooltip_text = str(c.def.get("text", ""))
 
 
@@ -60,4 +68,20 @@ static func _short(c: Card) -> String:
 			return "STOP %dS" % int(params.get("seconds", 5))
 		"redraw":
 			return "REDRAW"
+		"copy_enemy":
+			return "COPY FOE"
+		"wild":
+			return "1 TO 5"
+		"discard_card":
+			return "DROP LAST"
+		"shield":
+			return "BLOCK"
+		"hide_total":
+			return "HIDE"
+		"crit_boost":
+			return "CRIT"
+		"duplicate":
+			return "COPY LAST"
+		"heal":
+			return "+%d HP" % int(params.get("amount", 6))
 	return c.effect_name().to_upper().replace("_", " ")
