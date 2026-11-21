@@ -27,6 +27,8 @@ var stats: Dictionary = {}
 var active: bool = false
 ## How the run ended, for the ending screen: {"won": bool, "enemy": id}.
 var outcome: Dictionary = {}
+## A trinket found after the last win (shown on the reward screen), or "".
+var last_trinket: String = ""
 var player_name: String = "ALICE"
 
 var _elapsed_ms: int = 0
@@ -55,6 +57,7 @@ func new_run(seed_value: int, daily: bool = false, date: String = "") -> void:
 	battle_index = 0
 	stats = _empty_stats()
 	outcome = {}
+	last_trinket = ""
 	_elapsed_ms = 0
 	_segment_start = Time.get_ticks_msec()
 	battles = act_order(act_id, Rng.rng)
@@ -98,10 +101,27 @@ func record_win(enemy_id: String) -> Dictionary:
 	var healed := mini(int(GameData.rule("run.heal_after_win", 5)), max_hp - hp)
 	hp += maxi(0, healed)
 	battle_index += 1
+	last_trinket = ""
+	if battle_index == int(GameData.rule("run.trinket_after_battle", 2)):
+		_award_trinket()
 	if is_complete():
 		outcome = {"won": true, "enemy": enemy_id}
 	save()
 	return {"gold": earned, "healed": healed}
+
+
+## Trinkets are given after the 2nd soldier: a random one Alice doesn't own yet.
+func _award_trinket() -> void:
+	var options: Array = GameData.trinkets.keys().filter(func(id: String) -> bool: return not trinkets.has(id))
+	if options.is_empty():
+		return
+	options.sort()
+	last_trinket = str(options[Rng.rng.randi_range(0, options.size() - 1)])
+	trinkets.append(last_trinket)
+
+
+func trinket_defs() -> Array:
+	return trinkets.map(func(id: String) -> Dictionary: return GameData.trinkets.get(id, {}))
 
 
 func record_loss(enemy_id: String) -> void:
