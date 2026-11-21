@@ -74,11 +74,11 @@ func test_two_hand_cards_per_round_and_the_next_round_resets_the_count() -> void
 	assert_true(b.can_play(0))
 
 
-func test_hand_cards_still_play_after_ready() -> void:
+func test_hand_cards_still_play_after_standing() -> void:
 	var b := TestHelpers.battle("club_soldier", [], ["num_2"])
 	TestHelpers.set_table(b.player, ["5", "4"])
 	b.player_stay()
-	assert_true(b.can_play(0), "ready only stops drawing")
+	assert_true(b.can_play(0), "standing only stops drawing")
 	assert_true(b.play_card(0))
 	assert_eq(b.player.total(), 11)
 

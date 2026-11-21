@@ -1,5 +1,5 @@
 extends GutTest
-## Round rules: playing on past a bust, the super bust at 30, Ready ending the round, Heal.
+## Round rules: playing on past a bust, the super bust at 30, Stand ending the round, Heal.
 
 var rules: Dictionary = GameData.read_json("rules.json")
 
@@ -48,7 +48,7 @@ func test_super_bust_lands_through_resolve_round() -> void:
 	assert_eq(b.player.hp, 30 - ((30 - 21) + 4) * 2)
 
 
-func test_ready_lets_the_enemy_finish_its_turn_instantly() -> void:
+func test_stand_lets_the_enemy_finish_its_turn_instantly() -> void:
 	var b := TestHelpers.battle("club_soldier", [], [], 9)
 	b.start_round()
 	TestHelpers.set_table(b.enemy, ["5", "4"])

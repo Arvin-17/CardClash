@@ -22,7 +22,7 @@ func _play_round(b: BattleState) -> void:
 			b.heal_action()
 		elif action == "stay":
 			b.player_stay()
-			b.finish_enemy_turn()  # Ready ends the round at once
+			b.finish_enemy_turn()  # Stand ends the round at once
 			break
 		elif action.begins_with("play:"):
 			b.play_card(int(action.trim_prefix("play:")))

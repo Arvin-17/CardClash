@@ -8,7 +8,7 @@ extends Node
 ##               SURPRISE
 ##
 ## Rounds are real-time inside a short window (round.seconds) but resolve in fixed steps,
-## so they stay fair and testable. READY ends the round at once (the enemy finishes its
+## so they stay fair and testable. STAND ends the round at once (the enemy finishes its
 ## turn instantly), and so does a super bust (30+). Logic changes state first, then emits on Events. The UI only
 ## calls hit()/stay()/play() and listens; it never changes game state itself.
 
@@ -100,13 +100,13 @@ func stay() -> void:
 	if not can_act():
 		return
 	battle.player_stay()
-	Events.message.emit("READY ON %d." % battle.player.total(battle.target))
-	# READY ends the round now: the enemy plays out the rest of its turn instantly.
+	Events.message.emit("STAND ON %d." % battle.player.total(battle.target))
+	# STAND ends the round now: the enemy plays out the rest of its turn instantly.
 	battle.finish_enemy_turn()
 	_check_round_end()
 
 
-## Hand cards work whenever a round is live (even after Ready or mid-attack). BattleState
+## Hand cards work whenever a round is live (even mid-attack). BattleState
 ## enforces the per-round limit.
 func play(index: int, choice: Dictionary = {}) -> bool:
 	if not round_live() or not battle.play_card(index, choice):
@@ -136,18 +136,18 @@ func round_live() -> bool:
 	return battle != null and (state == State.ROUND_ACTIVE or state == State.SURPRISE)
 
 
-## Ready: any time the round is live until you've readied (busting doesn't end your turn).
+## Stand: any time the round is live until you've stood (busting doesn't end your turn).
 func can_act() -> bool:
 	return round_live() and not battle.player.stayed
 
 
-## Hit: like Ready, but not while you're over 21.
+## Hit: like Stand, but not while you're over 21.
 func can_hit() -> bool:
 	return can_act() and not battle.player.is_bust(battle.target)
 
 
 ## Every phase change goes out on Events, so the UI never sits on a stale screen
-## (e.g. the hand and READY button after a surprise attack's pause).
+## (e.g. the hand and STAND button after a surprise attack's pause).
 func _set_state(next: State) -> void:
 	if state == next:
 		return
@@ -206,7 +206,7 @@ func _on_round_timeout() -> void:
 	if state != State.ROUND_ACTIVE:
 		return
 	if not battle.player.stayed:
-		Events.message.emit("TIME! READY ON %d." % battle.player.total(battle.target))
+		Events.message.emit("TIME! STAND ON %d." % battle.player.total(battle.target))
 	battle.force_stay()
 	_check_round_end()
 

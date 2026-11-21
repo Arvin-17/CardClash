@@ -37,22 +37,22 @@ func test_round_ends_as_soon_as_both_have_stayed() -> void:
 	assert_true(_c.round_timer.is_stopped())
 
 
-func test_ready_and_hand_work_again_after_a_surprise_attack() -> void:
+func test_stand_and_hand_work_again_after_a_surprise_attack() -> void:
 	await _start()
-	_c.battle.shield = 1  # block it, so the attack itself can't bust Alice and disable READY
+	_c.battle.shield = 1  # block it, so the attack itself can't bust Alice and disable STAND
 	_c._on_intent_full()
 	assert_eq(_c.state, BattleController.State.SURPRISE)
 	Events.hand_changed.emit()  # an attack that touches the hand redraws the screen mid-pause
 	await wait_seconds(_pause())
 	assert_eq(_c.state, BattleController.State.ROUND_ACTIVE)
-	assert_false(_ui._stay.disabled, "READY is clickable again")
+	assert_false(_ui._stay.disabled, "STAND is clickable again")
 	assert_false(_ui._hit.disabled, "HIT is clickable again")
 	assert_gt(_hand_views().size(), 0)
 	for v: Button in _hand_views():
 		assert_false(v.disabled, "hand cards are never greyed out")
 
 
-func test_ready_pressed_during_an_attack_pause_counts() -> void:
+func test_stand_pressed_during_an_attack_pause_counts() -> void:
 	await _start()
 	_c.battle.shield = 1
 	_c.battle.enemy_stay()
@@ -79,7 +79,7 @@ func test_hand_cards_stay_clickable_at_the_play_limit() -> void:
 	assert_eq(b.cards_played, b.plays_per_round)
 
 
-func test_ready_ends_the_round_at_once() -> void:
+func test_stand_ends_the_round_at_once() -> void:
 	await _start()
 	assert_false(_c.battle.enemy.stayed, "the enemy is still mid-turn")
 	_c.stay()
@@ -102,7 +102,7 @@ func test_over_21_hit_is_off_but_ready_and_cards_work() -> void:
 	TestHelpers.set_table(b.player, ["10", "10", "5"])
 	_ui._refresh()
 	assert_true(_ui._hit.disabled, "no hitting while over 21")
-	assert_false(_ui._stay.disabled, "you can still ready up")
+	assert_false(_ui._stay.disabled, "you can still stand")
 	assert_false(_c.battle.player.stayed)
 	_c.hit()
 	assert_eq(b.player.table.size(), 3, "hit refused")
