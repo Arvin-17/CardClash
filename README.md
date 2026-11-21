@@ -33,3 +33,15 @@ Win the run and the Queen of Hearts loses her head; lose, and Alice does.
 | `acts.json` | Act 3, The Queen's Court: 4 shuffled soldiers, then the Queen |
 | `rules.json` | Every tunable number: HP, timer, plays per round, damage table, gold, rewards |
 | `trinkets.json` | Passive items (stretch goal) |
+
+## Run the API locally
+
+```bash
+cd server
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements-dev.txt
+uvicorn app.main:app --reload      # http://localhost:8000/docs
+python -m pytest                   # tests
+```
+
+Settings come from environment variables; see `server/.env.example`.
