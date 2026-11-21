@@ -1,7 +1,8 @@
 extends Control
-## The endings. Win: the Queen's head turns into a card. Lose: "Off with her head!"
-## The AnimationPlayer's "win" and "lose" animations are placeholders for the designer.
-## Both endings then submit the run to the backend and show the stats.
+## The endings. Win: the world drains to grey, an axe shadow passes and the Queen's head
+## flips into a card. Lose: "Off with her head!", the axe swings at you and your view drops.
+## Both play the pixel-art sequences from game/art/anim (tools/sprites), then dim and show the
+## stats and leaderboard. Without the art, the old AnimationPlayer placeholders play instead.
 
 @onready var anim: AnimationPlayer = $AnimationPlayer
 @onready var figure: Control = $Figure
@@ -38,8 +39,24 @@ func _ready() -> void:
 	_status = _label(Vector2(250, 130), "", Palette.GREEN)
 	_board = _label(Vector2(250, 146), "", Palette.CREAM)
 
-	anim.play("win" if won else "lose")
-	await anim.animation_finished
+	var key := "ending_win" if won else "ending_lose"
+	if AnimLib.has(key) and not Autoplay.enabled():
+		figure.visible = false
+		title.visible = false
+		var seq := AnimLib.sprite({"play": key})
+		add_child(seq)
+		move_child(seq, 1)
+		await seq.animation_finished
+		create_tween().tween_property(seq, "modulate", Color(0.45, 0.45, 0.5), 0.6)
+		var panel := Panel.new()
+		panel.add_theme_stylebox_override("panel", Palette.box(Color(Palette.INK, 0.88), Palette.GOLD_DARK))
+		panel.position = Vector2(242, 62)
+		panel.size = Vector2(232, 200)
+		add_child(panel)
+		move_child(panel, seq.get_index() + 1)
+	else:
+		anim.play("win" if won else "lose")
+		await anim.animation_finished
 	_stats.visible = true
 	_submit()
 
@@ -92,4 +109,4 @@ func _on_board(entries: Variant, daily: bool) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	var key := event as InputEventKey
 	if key and key.pressed and not key.echo and (key.keycode == KEY_ENTER or key.keycode == KEY_SPACE):
-		get_tree().change_scene_to_file(RunState.MENU_SCENE)
+		Transition.go(RunState.MENU_SCENE)
