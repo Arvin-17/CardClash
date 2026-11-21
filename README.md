@@ -63,3 +63,21 @@ Stretch extras: `DELETE /run/{id}` with an `X-Admin-Key` header, and `GET /board
 - It checks every range (battles 0–5, at least 30 s, busts ≤ rounds, `won` only with 5 battles).
 - It cleans names and rate-limits `POST /run`.
 - It rejects old game versions, and daily runs that don't use today's seed.
+
+## Run the game
+
+1. Install [Godot 4.7](https://godotengine.org/download) (standard build, not .NET).
+2. Open `game/project.godot` and press **F5**.
+3. Controls: **H** hit, **S** stay.
+
+Unit tests use [GUT](https://github.com/bitwes/Gut). Install **GUT 9.7.1** from the Asset Library (it lands in `game/addons/gut`, which git ignores), then:
+
+```bash
+cd game
+godot --headless --import
+godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://tests -gexit
+```
+
+CI does the same on every pull request (`.github/workflows/game.yml`).
+
+Placeholder fonts come from `python3 tools/export_art.py`.

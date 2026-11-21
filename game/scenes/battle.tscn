@@ -1,0 +1,21 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/battle_controller.gd" id="1_ctrl"]
+[ext_resource type="Script" path="res://scripts/ui/battle_ui.gd" id="2_ui"]
+
+[node name="Battle" type="Node"]
+
+[node name="BattleController" type="Node" parent="."]
+script = ExtResource("1_ctrl")
+
+[node name="AiTimer" type="Timer" parent="BattleController"]
+wait_time = 0.5
+
+[node name="UI" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2_ui")

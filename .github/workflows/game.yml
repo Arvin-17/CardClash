@@ -1,0 +1,67 @@
+name: Game
+
+on:
+  pull_request:
+    paths: ["game/**", ".github/workflows/game.yml"]
+  push:
+    branches: [main]
+    paths: ["game/**", ".github/workflows/game.yml"]
+
+env:
+  GODOT_VERSION: "4.7.2"
+  GUT_VERSION: "9.7.1"
+
+jobs:
+  godot:
+    name: Godot import, GUT tests, smoke run
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: game
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Cache Godot
+        id: cache-godot
+        uses: actions/cache@v4
+        with:
+          path: ~/godot
+          key: godot-${{ env.GODOT_VERSION }}-linux
+
+      - name: Install Godot ${{ env.GODOT_VERSION }}
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        working-directory: .
+        run: |
+          mkdir -p ~/godot
+          curl -fsSL -o /tmp/godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q /tmp/godot.zip -d /tmp/godot
+          mv "/tmp/godot/Godot_v${GODOT_VERSION}-stable_linux.x86_64" ~/godot/godot
+
+      - name: Add Godot to PATH
+        working-directory: .
+        run: echo "$HOME/godot" >> "$GITHUB_PATH"
+
+      - name: Install GUT ${{ env.GUT_VERSION }}
+        run: |
+          curl -fsSL "https://github.com/bitwes/Gut/archive/refs/tags/v${GUT_VERSION}.tar.gz" | tar xz -C /tmp
+          mkdir -p addons
+          cp -r "/tmp/Gut-${GUT_VERSION}/addons/gut" addons/gut
+
+      - name: Import project
+        # A fresh checkout has no .godot/ cache yet, so the custom theme's font can't load
+        # until this first import finishes; its startup errors are expected and ignored.
+        run: godot --headless --import > /tmp/import-first.log 2>&1 || true
+
+      - name: Check that every script and resource loads (second import pass)
+        run: |
+          godot --headless --import 2>&1 | tee /tmp/import.log
+          if grep -E "SCRIPT ERROR|Parse Error|Failed to load script|Failed loading resource|No loader found" /tmp/import.log; then exit 1; fi
+
+      - name: Unit tests (GUT)
+        run: godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
+
+      - name: Smoke run (main menu, then a battle)
+        run: |
+          godot --headless --fixed-fps 60 --quit-after 600 2>&1 | tee /tmp/menu.log
+          godot --headless --fixed-fps 60 --quit-after 3600 res://scenes/battle.tscn 2>&1 | tee /tmp/battle.log
+          if grep -E "SCRIPT ERROR|Parse Error" /tmp/menu.log /tmp/battle.log; then exit 1; fi

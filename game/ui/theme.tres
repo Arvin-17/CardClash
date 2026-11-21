@@ -1,0 +1,12 @@
+[gd_resource type="Theme" load_steps=2 format=3]
+
+[ext_resource type="FontFile" path="res://art/fonts/pixel.fnt" id="1_pixel"]
+
+[resource]
+default_font = ExtResource("1_pixel")
+default_font_size = 8
+Label/colors/font_color = Color(0.949, 0.902, 0.788, 1)
+Button/colors/font_color = Color(0.949, 0.902, 0.788, 1)
+Button/colors/font_hover_color = Color(0.784, 0.196, 0.235, 1)
+Button/colors/font_pressed_color = Color(0.784, 0.196, 0.235, 1)
+Button/colors/font_disabled_color = Color(0.247, 0.49, 0.227, 1)
