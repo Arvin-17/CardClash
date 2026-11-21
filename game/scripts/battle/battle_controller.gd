@@ -8,7 +8,8 @@ extends Node
 ##               SURPRISE
 ##
 ## Rounds are real-time inside a short window (round.seconds) but resolve in fixed steps,
-## so they stay fair and testable. A round ends early the moment both sides have stayed. Logic changes state first, then emits on Events. The UI only
+## so they stay fair and testable. READY ends the round at once (the enemy finishes its
+## turn instantly), and so does a super bust (30+). Logic changes state first, then emits on Events. The UI only
 ## calls hit()/stay()/play() and listens; it never changes game state itself.
 
 enum State { DEAL, ROUND_ACTIVE, SURPRISE, RESOLVE, BATTLE_END }
@@ -87,11 +88,11 @@ func _process(_delta: float) -> void:
 # --- player input (requests; the controller decides) -------------------------
 
 func hit() -> void:
-	if not can_act():
+	if not can_hit():
 		return
 	battle.player_hit()
-	if battle.player.is_bust(battle.target):
-		Events.message.emit("BUST! %d" % battle.player.total(battle.target))
+	if battle.player.is_bust(battle.target) and not battle.player_super_bust():
+		Events.message.emit("BUST AT %d! A CARD CAN STILL SAVE YOU." % battle.player.total(battle.target))
 	_check_round_end()
 
 
@@ -100,8 +101,8 @@ func stay() -> void:
 		return
 	battle.player_stay()
 	Events.message.emit("READY ON %d." % battle.player.total(battle.target))
-	if _hurry():
-		_ai_wait_ticks = 0
+	# READY ends the round now: the enemy plays out the rest of its turn instantly.
+	battle.finish_enemy_turn()
 	_check_round_end()
 
 
@@ -112,6 +113,14 @@ func play(index: int, choice: Dictionary = {}) -> bool:
 		return false
 	_check_round_end()
 	return true
+
+
+## Heal: always on offer while the round is live; it uses one of this round's hand plays.
+## Returns the HP restored (0 if it couldn't be used).
+func heal() -> int:
+	if not round_live():
+		return 0
+	return battle.heal_action()
 
 
 ## Debug (F2): win the current battle instantly, to skip to the Queen while testing endings.
@@ -127,9 +136,14 @@ func round_live() -> bool:
 	return battle != null and (state == State.ROUND_ACTIVE or state == State.SURPRISE)
 
 
-## Hit and Ready: any time the round is live, until you ready up or bust.
+## Ready: any time the round is live until you've readied (busting doesn't end your turn).
 func can_act() -> bool:
 	return round_live() and not battle.player.stayed
+
+
+## Hit: like Ready, but not while you're over 21.
+func can_hit() -> bool:
+	return can_act() and not battle.player.is_bust(battle.target)
 
 
 ## Every phase change goes out on Events, so the UI never sits on a stale screen
@@ -176,13 +190,8 @@ func _on_ai_tick() -> void:
 	elif decision == EnemyAI.STAY:
 		battle.enemy_stay()
 		Events.message.emit("%s stays." % battle.enemy.display_name)
-	_ai_wait_ticks = 0 if _hurry() else _reaction_ticks()
+	_ai_wait_ticks = _reaction_ticks()
 	_check_round_end()
-
-
-## Once Alice is ready, the enemy stops "thinking" and finishes on every tick.
-func _hurry() -> bool:
-	return battle.player.stayed and bool(GameData.rule("ai.hurry_when_player_ready", true))
 
 
 func _reaction_ticks() -> int:
@@ -240,7 +249,7 @@ func _freeze_round_timer(seconds: float) -> void:
 
 
 func _check_round_end() -> void:
-	if state == State.ROUND_ACTIVE and battle.both_done():
+	if state == State.ROUND_ACTIVE and battle.round_over():
 		_resolve()
 
 
@@ -296,5 +305,7 @@ func _autoplay_step() -> void:
 		hit()
 	elif action == "stay":
 		stay()
+	elif action == "heal":
+		heal()
 	elif action.begins_with("play:"):
 		play(int(action.trim_prefix("play:")))
