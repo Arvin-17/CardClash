@@ -1,0 +1,10 @@
+{
+  "acts": [
+    {
+      "id": "act3_court",
+      "name": "The Queen's Court",
+      "battles": ["spade_soldier", "club_soldier", "diamond_soldier", "heart_soldier", "queen_of_hearts"],
+      "shuffle_soldiers": true
+    }
+  ]
+}

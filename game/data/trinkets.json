@@ -1,0 +1,25 @@
+{
+  "trinkets": [
+    {
+      "id": "rabbits_watch",
+      "name": "Rabbit's Watch",
+      "hook": "round_started",
+      "params": { "max_first_hit": 5 },
+      "text": "Your first hit each round is at most 5."
+    },
+    {
+      "id": "hatters_hat",
+      "name": "Hatter's Hat",
+      "hook": "round_resolved",
+      "params": { "bonus_damage": 2 },
+      "text": "+2 damage when you win a round."
+    },
+    {
+      "id": "cheshire_grin",
+      "name": "Cheshire Grin",
+      "hook": "surprise_attack",
+      "params": { "ignore_chance": 0.25 },
+      "text": "25% chance to ignore a surprise attack."
+    }
+  ]
+}

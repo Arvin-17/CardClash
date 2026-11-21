@@ -1,0 +1,23 @@
+# Godot
+.godot/
+/game/build/
+/game/export/
+*.translation
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+*.db
+*.sqlite3
+
+# Secrets
+.env
+.env.local
+
+# OS / editors
+.DS_Store
+.vscode/
+.idea/
