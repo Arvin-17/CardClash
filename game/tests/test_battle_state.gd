@@ -25,6 +25,8 @@ func test_rules_file_has_the_starting_values() -> void:
 	assert_eq(int(rules["player"]["base_attack"]), 3)
 	assert_eq(int(rules["round"]["seconds"]), 10, "short rounds")
 	assert_eq(int(rules["round"]["plays_per_round"]), 2, "2 hand cards per round")
+	assert_eq(int(rules["player"]["heal_action"]), 3, "the Heal action restores 3")
+	assert_eq(int(rules["damage"]["super_bust_at"]), 30)
 
 
 func test_deal_gives_two_blind_cards_each() -> void:
@@ -47,14 +49,14 @@ func test_new_round_clears_the_table_into_the_discard_pile() -> void:
 	assert_false(b.player.stayed)
 
 
-func test_hit_adds_a_card_and_busting_ends_your_turn() -> void:
+func test_busting_no_longer_ends_your_turn() -> void:
 	var b := _battle()
 	b.start_round()
 	_set_table(b.player, ["10", "9"])
 	while not b.player.is_bust():
 		b.player_hit()
-	assert_true(b.player.stayed, "a bust auto-stays")
-	assert_null(b.player_hit(), "no more hits after busting")
+	assert_false(b.player.stayed, "over 21 you can still play cards or ready up")
+	assert_null(b.player_hit(), "but no more hits while you're over")
 
 
 func test_resolve_applies_the_damage_table() -> void:
