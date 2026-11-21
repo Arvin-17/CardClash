@@ -32,3 +32,20 @@ static func decide(battle: BattleState) -> String:
 	if total <= int(ai.get("risk_max_total", 18)) and battle.rng.randf() < battle.enemy_risk:
 		return HIT
 	return STAY
+
+
+## What the AI is about to do, without rolling any dice (for the F1 debug overlay).
+static func preview(battle: BattleState) -> String:
+	var enemy := battle.enemy
+	if enemy.stayed:
+		return "STAYED"
+	var total := enemy.total(battle.target)
+	if total > battle.target:
+		return "BUST"
+	if battle.player.stayed and not battle.hide_total and total < battle.player.total(battle.target) and battle.player.total(battle.target) <= battle.target:
+		return "HIT (behind your total)"
+	if total < battle.enemy_stay_at:
+		return "HIT (below %d)" % battle.enemy_stay_at
+	if total <= 18:
+		return "STAY, %d%% RISKY HIT" % int(battle.enemy_risk * 100)
+	return "STAY"

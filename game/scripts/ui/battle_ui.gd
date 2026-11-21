@@ -27,7 +27,10 @@ var _overlay: Panel
 var _overlay_title: Label
 var _overlay_button: Button
 var _overlay_detail: Label
-var _portrait: ColorRect
+var _portrait: TextureRect
+var _flags: Label
+var _debug: Label
+var _chooser: PanelContainer
 
 const TIMER_W := 200.0
 const INTENT_W := 48.0
@@ -47,7 +50,8 @@ func _ready() -> void:
 	Events.surprise_attack.connect(_on_surprise)
 	Events.surprise_blocked.connect(func(_id: String, kind: String) -> void: _flash("BLOCKED %s!" % kind.to_upper().replace("_", " ")))
 	Events.round_resolved.connect(_on_round_resolved)
-	Events.boss_phase_changed.connect(func(_phase: int) -> void: _portrait.color = Palette.BLACK)
+	Events.boss_phase_changed.connect(func(_phase: int) -> void: _set_portrait(true))
+	Events.battle_started.connect(func(_id: String) -> void: _set_portrait(false))
 	Events.message.connect(func(text: String) -> void: _message.text = text)
 	Events.battle_won.connect(func(_id: String) -> void: _show_end(true))
 	Events.battle_lost.connect(func(_id: String) -> void: _show_end(false))
@@ -80,8 +84,7 @@ func _build() -> void:
 	_counts = _label(Vector2(370, 4), "", Palette.GREEN)
 
 	# The enemy across the table (placeholder portrait until the designer's sprite lands).
-	_portrait = ColorRect.new()
-	_portrait.color = Palette.RED
+	_portrait = TextureRect.new()
 	_portrait.position = Vector2(216, 16)
 	_portrait.size = Vector2(48, 56)
 	add_child(_portrait)
@@ -113,6 +116,9 @@ func _build() -> void:
 	_hand_row.add_theme_constant_override("separation", 4)
 	_player_hp = _label(Vector2(8, 252), "", Palette.RED)
 	_plays = _label(Vector2(120, 252), "", Palette.CREAM)
+	_flags = _label(Vector2(120, 242), "", Palette.GREEN)
+	_debug = _label(Vector2(6, 16), "", Palette.CREAM)
+	_debug.visible = false
 	_hit = _button(Vector2(330, 236), "HIT [H]", controller.hit)
 	_stay = _button(Vector2(400, 236), "STAY [S]", controller.stay)
 
@@ -180,10 +186,24 @@ func _unhandled_input(event: InputEvent) -> void:
 		KEY_S:
 			controller.stay()
 		KEY_1, KEY_2, KEY_3, KEY_4, KEY_5:
-			controller.play(key.keycode - KEY_1)
+			if _chooser == null:
+				_request_play(key.keycode - KEY_1)
+		KEY_ESCAPE:
+			_close_chooser()
 		KEY_ENTER, KEY_SPACE:
 			if _overlay.visible:
 				_on_continue()
+		KEY_F1:
+			if OS.is_debug_build():
+				_debug.visible = not _debug.visible
+				_refresh()
+		KEY_F2:
+			if OS.is_debug_build():
+				controller.debug_win()
+		KEY_F3:
+			if OS.is_debug_build():
+				print("CardClash seed: %d" % RunState.run_seed)
+				_message.text = "SEED %d (PRINTED)" % RunState.run_seed
 
 
 func _on_round_started(n: int) -> void:
@@ -207,6 +227,21 @@ func _refresh() -> void:
 	_player_total.add_theme_color_override("font_color", Palette.RED if pt > b.target else Palette.CREAM)
 	_plays.text = "PLAYS LEFT %d   DECK %d" % [b.plays_left, b.player_deck.count() if b.player_deck else 0]
 	_counts.text = _count_text(b.hit_deck)
+	var flags: Array[String] = []
+	if b.shield > 0:
+		flags.append("SHIELD %d" % b.shield)
+	if b.hide_total:
+		flags.append("SMOKE")
+	if b.crit_boost:
+		flags.append("VORPAL")
+	for t: Dictionary in b.trinket_defs:
+		flags.append(str(t.get("name", "")).to_upper())
+	_flags.text = "  ".join(flags)
+	if _debug.visible:
+		_debug.text = "F1 DEBUG  YOU %d  FOE %d  AI: %s  INTENT %d%%\nBLIND %s" % [
+			b.player.total(b.target), b.enemy.total(b.target), EnemyAI.preview(b),
+			int(100.0 * (1.0 - controller.intent_timer.time_left / maxf(controller.intent_timer.wait_time, 0.01))),
+			str(b.hit_deck.remaining_by_value())]
 	var can_act := controller.state == BattleController.State.ROUND_ACTIVE and not b.player.stayed
 	_hit.disabled = not can_act
 	_stay.disabled = not can_act
@@ -215,7 +250,7 @@ func _refresh() -> void:
 	for i in b.hand.size():
 		var v := HandCardView.new()
 		v.show_card(b.hand[i], i, can_act and b.can_play(i))
-		v.pressed.connect(controller.play.bind(i, {}))
+		v.pressed.connect(_request_play.bind(i))
 		v.mouse_entered.connect(func() -> void: _message.text = v.tooltip_text)
 		_hand_row.add_child(v)
 
@@ -236,6 +271,87 @@ func _fill(row: HBoxContainer, cards: Array[Card]) -> void:
 		var v := CardView.new()
 		v.show_card(c)
 		row.add_child(v)
+
+
+func _set_portrait(enraged: bool) -> void:
+	var b := controller.battle
+	if b == null:
+		return
+	var base := "res://art/%s" % str(b.enemy_def.get("sprite", ""))
+	var path := base + ("_rage.png" if enraged else ".png")
+	if not ResourceLoader.exists(path):
+		path = base + ".png"
+	_portrait.texture = load(path) if ResourceLoader.exists(path) else null
+
+
+## Cards that need a choice (Painted Rose's value, Mushroom's target and sign) open a chooser.
+func _request_play(index: int) -> void:
+	var b := controller.battle
+	if b == null or index < 0 or index >= b.hand.size() or not b.can_play(index):
+		return
+	var card: Card = b.hand[index]
+	var params := b.params_for(card)
+	if card.effect_name() == "wild":
+		_open_chooser("PAINT IT:", _wild_options(index, params))
+	elif card.effect_name() == "modify_value" and str(params.get("target", "")) == "choose":
+		_open_chooser("MUSHROOM:", _mushroom_options(index, int(params.get("amount", 2))))
+	else:
+		controller.play(index)
+
+
+func _wild_options(index: int, params: Dictionary) -> Array:
+	var out: Array = []
+	for v in range(int(params.get("min", 1)), int(params.get("max", 5)) + 1):
+		out.append([str(v), {"value": v}, index])
+	return out
+
+
+func _mushroom_options(index: int, amount: int) -> Array:
+	var b := controller.battle
+	var out: Array = []
+	for side: Array in [["player", "YOU", b.player], ["enemy", "FOE", b.enemy]]:
+		var who: Combatant = side[2]
+		for i in who.table.size():
+			for dir in [1, -1]:
+				out.append(["%s %s%s%d" % [side[1], who.table[i].face(), "+" if dir > 0 else "-", amount],
+					{"owner": side[0], "index": i, "dir": dir}, index])
+	return out
+
+
+func _open_chooser(title: String, options: Array) -> void:
+	_close_chooser()
+	_chooser = PanelContainer.new()
+	_chooser.add_theme_stylebox_override("panel", Palette.box(Palette.BLACK, Palette.RED))
+	_chooser.position = Vector2(8, 100)
+	_chooser.custom_minimum_size = Vector2(464, 0)
+	var flow := HFlowContainer.new()
+	_chooser.add_child(flow)
+	flow.add_child(Palette.label(title, Palette.RED))
+	for opt: Array in options:
+		var b := Button.new()
+		b.text = opt[0]
+		b.focus_mode = Control.FOCUS_NONE
+		b.add_theme_stylebox_override("normal", Palette.box(Palette.BLACK, Palette.CREAM))
+		b.add_theme_stylebox_override("hover", Palette.box(Palette.RED, Palette.CREAM))
+		b.pressed.connect(_choose.bind(opt[2], opt[1]))
+		flow.add_child(b)
+	var cancel := Button.new()
+	cancel.text = "CANCEL [ESC]"
+	cancel.focus_mode = Control.FOCUS_NONE
+	cancel.pressed.connect(_close_chooser)
+	flow.add_child(cancel)
+	add_child(_chooser)
+
+
+func _choose(index: int, choice: Dictionary) -> void:
+	_close_chooser()
+	controller.play(index, choice)
+
+
+func _close_chooser() -> void:
+	if _chooser:
+		_chooser.queue_free()
+		_chooser = null
 
 
 func _on_hp_changed(who: String, hp: int, max_hp: int) -> void:
@@ -273,6 +389,7 @@ func _flash(text: String) -> void:
 
 
 func _on_round_resolved(r: Dictionary) -> void:
+	_close_chooser()
 	_refresh()
 	var text := ""
 	match str(r["kind"]):

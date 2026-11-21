@@ -37,6 +37,10 @@ var enemy_risk: float = 0.0
 var surprise_count: int = 0
 ## Boss phase: 2 once the Queen is enraged.
 var phase: int = 1
+## Trinkets Alice owns (entries from trinkets.json). Each one hooks a moment through its params:
+## max_first_hit (round_started), bonus_damage (round_resolved), ignore_chance (surprise_attack).
+var trinket_defs: Array = []
+var hits_this_round: int = 0
 ## Hedgehog Shield charges: each blocks one surprise attack.
 var shield: int = 0
 ## Per-round flags set by effects.
@@ -65,6 +69,19 @@ func setup_deck(p_card_defs: Dictionary, deck_ids: Array) -> void:
 	player_deck = PlayerDeck.new(deck_ids, card_defs, rng)
 
 
+func setup_trinkets(defs: Array) -> void:
+	trinket_defs = defs
+
+
+## The first owned trinket's value for `key`, or `fallback`.
+func trinket_param(key: String, fallback: Variant) -> Variant:
+	for t: Dictionary in trinket_defs:
+		var params: Dictionary = t.get("params", {})
+		if params.has(key):
+			return params[key]
+	return fallback
+
+
 func enemy_id() -> String:
 	return str(enemy_def.get("id", ""))
 
@@ -84,6 +101,7 @@ func start_round() -> void:
 	hide_total = false
 	crit_boost = false
 	peeked_card = null
+	hits_this_round = 0
 	plays_left = int(round_rule("plays_per_round", 2))
 	for _i in int(round_rule("blind_cards_dealt", 2)):
 		_deal(player)
@@ -141,6 +159,13 @@ func player_hit() -> Card:
 	if player.stayed:
 		return null
 	var card := _deal(player)
+	hits_this_round += 1
+	# Rabbit's Watch: your first hit each round is at most 5.
+	var cap := int(trinket_param("max_first_hit", 0))
+	if card != null and hits_this_round == 1 and cap > 0 and card.value() > cap:
+		card.modifier = cap - card.base_value
+		emit_total_changed(player)
+		message.emit("Rabbit's Watch: your %s counts as %d." % [card.face(), cap])
 	_check_player_bust()
 	return card
 
@@ -278,6 +303,12 @@ func fire_surprise() -> String:
 	var effect := EffectRegistry.enemy_effect(kind)
 	var params: Dictionary = enemy_def.get("surprise_params", {})
 	params = params.duplicate(true)
+	# Cheshire Grin: a chance to ignore it entirely.
+	var ignore := float(trinket_param("ignore_chance", 0.0))
+	if ignore > 0.0 and rng.randf() < ignore:
+		surprise_blocked.emit(enemy_id(), kind)
+		message.emit("The Cheshire Cat grins. The attack fades away.")
+		return kind
 	if effect != null and effect.can_play(self, params):
 		effect.apply(self, params)
 	surprise_attack.emit(enemy_id(), kind)
@@ -301,7 +332,9 @@ func force_stay() -> void:
 func resolve_round() -> Dictionary:
 	var pt := player.total(target)
 	var et := enemy.total(target)
-	var result := Rules.resolve(pt, et, player.base_attack, enemy.base_attack, rules, crit_boost)
+	# Hatter's Hat: extra damage when Alice wins.
+	var win_bonus := int(trinket_param("bonus_damage", 0))
+	var result := Rules.resolve(pt, et, player.base_attack, enemy.base_attack, rules, crit_boost, win_bonus)
 	if result["kind"] == "both_bust":
 		player.take_damage(result["messy_damage"])
 		enemy.take_damage(result["messy_damage"])

@@ -45,6 +45,7 @@ func start(enemy_id: String) -> void:
 		enemy_id = RunState.current_enemy_id()
 	battle = BattleState.new(GameData.rules, GameData.enemy(enemy_id), Rng.rng, RunState.hp, RunState.max_hp)
 	battle.setup_deck(GameData.cards, RunState.deck)
+	battle.setup_trinkets(RunState.trinket_defs())
 	battle.card_dealt.connect(Events.card_dealt.emit)
 	battle.card_removed.connect(Events.card_removed.emit)
 	battle.card_played.connect(Events.card_played.emit)
@@ -100,6 +101,14 @@ func play(index: int, choice: Dictionary = {}) -> bool:
 		return false
 	_check_round_end()
 	return true
+
+
+## Debug (F2): win the current battle instantly, to skip to the Queen while testing endings.
+func debug_win() -> void:
+	if battle == null or state == State.BATTLE_END or state == State.RESOLVE:
+		return
+	battle.enemy.hp = 0
+	_end()
 
 
 func _can_act() -> bool:

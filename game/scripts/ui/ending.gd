@@ -70,7 +70,23 @@ func _on_submitted(result: Variant, payload: Dictionary) -> void:
 		Autoplay.log_line("run %s, battles won %d, rounds %d" % ["won" if won else "lost", payload["battles_won"], payload["stats"]["rounds"]])
 		get_tree().quit()
 		return
-	_board.text = "ENTER: MENU"
+	_board.text = "LOADING LEADERBOARD..." if result is Dictionary else "ENTER: MENU"
+	if result is Dictionary:
+		Api.leaderboard(bool(payload["is_daily"]), 10, _on_board.bind(bool(payload["is_daily"])))
+
+
+func _on_board(entries: Variant, daily: bool) -> void:
+	if not (entries is Array):
+		_board.text = "ENTER: MENU"
+		return
+	var lines: Array[String] = ["TODAY'S TOP 10" if daily else "TOP 10"]
+	for e: Dictionary in entries:
+		var secs := int(e.get("time_ms", 0)) / 1000
+		var result := "QUEEN" if bool(e.get("won", false)) else "%d/5" % int(e.get("battles_won", 0))
+		lines.append("%2d %-16s %-5s %d:%02d" % [int(e.get("rank", 0)), str(e.get("player_name", "")).to_upper(), result, secs / 60, secs % 60])
+	lines.append("")
+	lines.append("ENTER: MENU")
+	_board.text = "\n".join(lines)
 
 
 func _unhandled_input(event: InputEvent) -> void:

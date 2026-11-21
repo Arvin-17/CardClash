@@ -58,7 +58,11 @@ jobs:
           if grep -E "SCRIPT ERROR|Parse Error|Failed to load script|Failed loading resource|No loader found" /tmp/import.log; then exit 1; fi
 
       - name: Unit tests (GUT)
-        run: godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
+        run: |
+          set -o pipefail
+          godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit 2>&1 | tee /tmp/gut.log
+          # GUT skips a test file that fails to parse instead of failing, so catch that here.
+          if grep -E "SCRIPT ERROR|Failed to load script|Ignoring script" /tmp/gut.log; then exit 1; fi
 
       - name: Smoke run (main menu)
         run: |

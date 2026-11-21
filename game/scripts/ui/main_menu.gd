@@ -17,17 +17,19 @@ func _ready() -> void:
 
 	var y := 112
 	_button("NEW RUN [ENTER]", y, _new_run)
+	y += 22
+	_button("DAILY RUN [D]", y, _daily_run)
 	if RunState.has_save():
 		y += 22
 		_button("CONTINUE [C]", y, _continue)
 
 	var name_label := Palette.label("NAME", Palette.CREAM)
-	name_label.position = Vector2(180, 172)
+	name_label.position = Vector2(180, 190)
 	add_child(name_label)
 	_name = LineEdit.new()
 	_name.text = RunState.player_name
 	_name.max_length = 16
-	_name.position = Vector2(204, 168)
+	_name.position = Vector2(204, 186)
 	_name.size = Vector2(96, 14)
 	_name.add_theme_stylebox_override("normal", Palette.box(Palette.BLACK, Palette.GREEN))
 	_name.add_theme_stylebox_override("focus", Palette.box(Palette.BLACK, Palette.RED))
@@ -78,6 +80,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		_new_run()
 	elif key.keycode == KEY_C and RunState.has_save():
 		_continue()
+	elif key.keycode == KEY_D:
+		_daily_run()
 
 
 func _new_run() -> void:
@@ -85,6 +89,21 @@ func _new_run() -> void:
 		return
 	RunState.clear_save()
 	RunState.new_run(Rng.new_seed())
+	get_tree().change_scene_to_file(RunState.MAP_SCENE)
+
+
+## Daily Run: everyone gets the same seed today (from GET /daily-seed). Needs the server.
+func _daily_run() -> void:
+	_status.text = "FETCHING TODAY'S SEED..."
+	Api.daily_seed(_on_daily_seed)
+
+
+func _on_daily_seed(daily: Variant) -> void:
+	if not (daily is Dictionary):
+		_status.text = "DAILY RUN NEEDS THE SERVER. TRY A NEW RUN!"
+		return
+	RunState.clear_save()
+	RunState.new_run(int(daily["seed"]), true, str(daily["date"]))
 	get_tree().change_scene_to_file(RunState.MAP_SCENE)
 
 

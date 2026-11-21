@@ -16,6 +16,10 @@ func _ready() -> void:
 	load_all()
 
 
+func _exit_tree() -> void:
+	EffectRegistry.clear_cache()
+
+
 func load_all() -> void:
 	rules = read_json("rules.json")
 	apply_cards(read_json("cards.json"))
