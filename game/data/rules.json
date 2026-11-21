@@ -3,7 +3,8 @@
   "blackjack": 21,
   "player": {
     "max_hp": 30,
-    "base_attack": 3
+    "base_attack": 3,
+    "heal_action": 3
   },
   "starter_deck": ["num_1", "num_1", "num_2", "num_2", "num_3", "num_3", "drink_me", "drink_me", "teacup", "eat_me"],
   "round": {
@@ -19,8 +20,7 @@
     "reaction_min_seconds": 1.0,
     "reaction_max_seconds": 2.0,
     "risk_max_total": 18,
-    "reads_player_total": true,
-    "hurry_when_player_ready": true
+    "reads_player_total": true
   },
   "surprise": {
     "pause_seconds": 1.0,
@@ -29,6 +29,8 @@
   "damage": {
     "messy_round": 2,
     "critical_multiplier": 2,
+    "super_bust_at": 30,
+    "super_bust_multiplier": 2,
     "tie_favors_player": false
   },
   "run": {
