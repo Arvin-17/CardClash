@@ -32,9 +32,16 @@ func _ready() -> void:
 		add_child(b)
 		_in(b, "%d  %s" % [i + 1, str(d.get("name", "")).to_upper()], Palette.BLACK, Vector2(6, 6))
 		_in(b, str(d.get("rarity", "")).to_upper(), Palette.RED if rare else Palette.GREEN, Vector2(6, 16))
-		var text := _in(b, str(d.get("text", "")).to_upper(), Palette.BLACK, Vector2(6, 32))
-		text.size = Vector2(108, 56)
+		# Width and wrap mode go in before the text, so the label can't grow past the card.
+		var text := Label.new()
 		text.autowrap_mode = TextServer.AUTOWRAP_WORD
+		text.custom_minimum_size = Vector2(108, 0)
+		text.size = Vector2(108, 56)
+		text.position = Vector2(6, 32)
+		text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		text.add_theme_color_override("font_color", Palette.BLACK)
+		text.text = str(d.get("text", "")).to_upper()
+		b.add_child(text)
 
 	_button("REMOVE A CARD [R]", Vector2(120, 176), _show_removals)
 	_button("SKIP [K]", Vector2(272, 176), _skip)
