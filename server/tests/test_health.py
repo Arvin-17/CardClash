@@ -12,3 +12,11 @@ def test_docs_are_served(client):
 def test_cors_allows_the_local_web_build(client):
     r = client.get("/health", headers={"Origin": "http://localhost:8060"})
     assert r.headers.get("access-control-allow-origin") == "http://localhost:8060"
+
+
+def test_postgres_urls_get_an_explicit_driver():
+    from app.db import normalize_url
+
+    assert normalize_url("postgres://u:p@host/db") == "postgresql+psycopg://u:p@host/db"
+    assert normalize_url("postgresql://u:p@host/db") == "postgresql+psycopg://u:p@host/db"
+    assert normalize_url("sqlite:///./cardclash.db") == "sqlite:///./cardclash.db"

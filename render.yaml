@@ -1,0 +1,36 @@
+# Render blueprint for the CardClash API (FastAPI).
+# Free services sleep when idle: hit /health a few minutes before judging.
+services:
+  - type: web
+    name: cardclash-api
+    runtime: python
+    plan: free
+    # Built from the repo root (not rootDir: server) so the API can read the shared
+    # game/data/cards.json. buildFilter limits auto-deploys to server or data changes.
+    buildCommand: pip install -r server/requirements.txt
+    # --proxy-headers: rate limits must see the player's IP, not Render's proxy.
+    startCommand: cd server && uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips='*'
+    healthCheckPath: /health
+    buildFilter:
+      paths:
+        - server/**
+        - game/data/**
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.8"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: cardclash-db
+          property: connectionString
+      - key: ADMIN_KEY
+        generateValue: true
+      # The game's origin(s), comma-separated. itch.io serves web games from html-classic.itch.zone.
+      - key: ALLOWED_ORIGINS
+        value: https://html-classic.itch.zone,http://localhost:8060
+      - key: GAME_VERSION
+        value: "0.1.0"
+
+databases:
+  # SQLite on a free host can reset on redeploy, so the demo uses Render's free Postgres.
+  - name: cardclash-db
+    plan: free
