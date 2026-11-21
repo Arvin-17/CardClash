@@ -45,3 +45,21 @@ python -m pytest                   # tests
 ```
 
 Settings come from environment variables; see `server/.env.example`.
+
+### API
+
+| Method + path | Purpose |
+| --- | --- |
+| `GET /health` | Is the server up (the game shows online/offline) |
+| `GET /daily-seed` | Today's shared seed `{date, seed}` |
+| `GET /cards` | `cards.json` with an ETag (the game falls back to its bundled copy) |
+| `POST /run` | Submit a finished run → `201 {id, rank}`; invalid → `422` |
+| `GET /leaderboard?daily=&limit=` | Top runs: winners, then battles won, then time |
+| `GET /stats` | Win rate, bust rate, blackjack rate, Queen kills, top cards |
+
+Stretch extras: `DELETE /run/{id}` with an `X-Admin-Key` header, and `GET /board`, an auto-refreshing leaderboard page for a second screen.
+
+**Anti-cheat basics.** Any run sent from a browser can be faked, so the server stops junk and casual cheating:
+- It checks every range (battles 0–5, at least 30 s, busts ≤ rounds, `won` only with 5 battles).
+- It cleans names and rate-limits `POST /run`.
+- It rejects old game versions, and daily runs that don't use today's seed.
