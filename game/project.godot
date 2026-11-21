@@ -23,6 +23,12 @@ Rng="*res://scripts/autoload/rng.gd"
 Events="*res://scripts/autoload/events.gd"
 RunState="*res://scripts/autoload/run_state.gd"
 Api="*res://scripts/autoload/api.gd"
+Audio="*res://scripts/autoload/audio.gd"
+
+[cardclash]
+
+api/base_url="http://127.0.0.1:8000"
+api/timeout_seconds=6.0
 
 [display]
 
