@@ -19,6 +19,11 @@ static func enemy_effect(kind: String) -> CardEffect:
 	return _load(ENEMY_DIR + kind + ".gd")
 
 
+## Drop cached effects (called on exit so no script resources outlive the engine).
+static func clear_cache() -> void:
+	_cache.clear()
+
+
 static func _load(path: String) -> CardEffect:
 	if _cache.has(path):
 		return _cache[path]
