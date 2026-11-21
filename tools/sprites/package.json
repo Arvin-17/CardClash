@@ -1,0 +1,7 @@
+{
+  "name": "cardclash-sprites",
+  "private": true,
+  "description": "Renders CardClash's pixel-art animations into game/art/ (sprite sheets + manifest).",
+  "scripts": { "export": "node export.js" },
+  "dependencies": { "@napi-rs/canvas": "^0.1.65" }
+}

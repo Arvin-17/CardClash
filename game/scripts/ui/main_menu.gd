@@ -11,11 +11,16 @@ func _ready() -> void:
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
 
-	_center(Palette.label("CARDCLASH", Palette.RED, true), 50)
-	_center(Palette.label("A BLACKJACK WONDERLAND", Palette.CREAM), 74)
-	_center(Palette.label("GET CLOSER TO 21 THAN THE QUEEN'S SOLDIERS", Palette.GREEN), 86)
-
+	# The animated title screen (logo, crown, pocket-watch moon, falling cards, checkerboard
+	# floor) from game/art/anim; plain text if the art isn't there.
 	var y := 112
+	if AnimLib.has("title"):
+		add_child(AnimLib.sprite({"loop": "title"}))
+		y = 140
+	else:
+		_center(Palette.label("CARDCLASH", Palette.RED, true), 50)
+		_center(Palette.label("A BLACKJACK WONDERLAND", Palette.CREAM), 74)
+		_center(Palette.label("GET CLOSER TO 21 THAN THE QUEEN'S SOLDIERS", Palette.GREEN), 86)
 	_button("NEW RUN [ENTER]", y, _new_run)
 	y += 22
 	_button("DAILY RUN [D]", y, _daily_run)
@@ -24,12 +29,12 @@ func _ready() -> void:
 		_button("CONTINUE [C]", y, _continue)
 
 	var name_label := Palette.label("NAME", Palette.CREAM)
-	name_label.position = Vector2(180, 190)
+	name_label.position = Vector2(180, y + 26)
 	add_child(name_label)
 	_name = LineEdit.new()
 	_name.text = RunState.player_name
 	_name.max_length = 16
-	_name.position = Vector2(204, 186)
+	_name.position = Vector2(204, y + 22)
 	_name.size = Vector2(96, 14)
 	_name.add_theme_stylebox_override("normal", Palette.box(Palette.BLACK, Palette.GREEN))
 	_name.add_theme_stylebox_override("focus", Palette.box(Palette.BLACK, Palette.RED))
@@ -37,8 +42,8 @@ func _ready() -> void:
 	_name.text_submitted.connect(func(_t: String) -> void: _name.release_focus())
 	add_child(_name)
 
-	_center(Palette.label("H HIT   SPACE READY   1-5 PLAY A CARD (2 PER ROUND)", Palette.GREEN), 214)
-	_status = Palette.label("CHECKING SERVER...", Palette.GREEN)
+	_center(Palette.shadow_label("H HIT   SPACE READY   1-5 PLAY A CARD (2 PER ROUND)", Palette.GOLD_HI), 246)
+	_status = Palette.shadow_label("CHECKING SERVER...", Palette.LAVENDER)
 	_status.position = Vector2(4, 260)
 	add_child(_status)
 
@@ -66,8 +71,8 @@ func _button(text: String, y: int, action: Callable) -> void:
 	b.position = Vector2(176, y)
 	b.size = Vector2(128, 18)
 	b.focus_mode = Control.FOCUS_NONE
-	b.add_theme_stylebox_override("normal", Palette.box(Palette.BLACK, Palette.CREAM))
-	b.add_theme_stylebox_override("hover", Palette.box(Palette.BLACK, Palette.RED))
+	b.add_theme_stylebox_override("normal", Palette.box(Color(Palette.INK, 0.9), Palette.CREAM))
+	b.add_theme_stylebox_override("hover", Palette.box(Palette.PLUM, Palette.GOLD_HI))
 	b.pressed.connect(action)
 	add_child(b)
 
@@ -89,7 +94,7 @@ func _new_run() -> void:
 		return
 	RunState.clear_save()
 	RunState.new_run(Rng.new_seed())
-	get_tree().change_scene_to_file(RunState.MAP_SCENE)
+	Transition.rabbit_hole(RunState.MAP_SCENE, str(GameData.act(RunState.act_id).get("name", "")))
 
 
 ## Daily Run: everyone gets the same seed today (from GET /daily-seed). Needs the server.
@@ -104,9 +109,9 @@ func _on_daily_seed(daily: Variant) -> void:
 		return
 	RunState.clear_save()
 	RunState.new_run(int(daily["seed"]), true, str(daily["date"]))
-	get_tree().change_scene_to_file(RunState.MAP_SCENE)
+	Transition.rabbit_hole(RunState.MAP_SCENE, str(GameData.act(RunState.act_id).get("name", "")))
 
 
 func _continue() -> void:
 	if RunState.load_saved():
-		get_tree().change_scene_to_file(RunState.scene_after_battle() if not RunState.outcome.is_empty() else RunState.MAP_SCENE)
+		Transition.go(RunState.scene_after_battle() if not RunState.outcome.is_empty() else RunState.MAP_SCENE)
