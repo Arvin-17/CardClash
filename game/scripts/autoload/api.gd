@@ -3,6 +3,9 @@ extends Node
 ## network directly. Every call fails silently: a dead Wi-Fi at the demo table should
 ## cost the leaderboard, never the game.
 ##
+## Scenes pass a `done` Callable instead of awaiting, so a scene that changes before the
+## reply arrives is simply skipped (a freed object's Callable is no longer valid).
+##
 ## Base URL: project setting cardclash/api/base_url, overridable with `-- --api=URL`.
 
 signal online_changed(is_online: bool)
@@ -48,9 +51,48 @@ func request_json(method: HTTPClient.Method, path: String, body: Variant = null)
 
 
 ## GET /health: is the server up? Shown as online/offline on the menu.
-func health() -> bool:
+func health(done: Callable = Callable()) -> bool:
 	var r: Variant = await request_json(HTTPClient.METHOD_GET, "/health")
-	return r is Dictionary and bool((r as Dictionary).get("ok", false))
+	var ok := r is Dictionary and bool((r as Dictionary).get("ok", false))
+	_finish(done, ok)
+	return ok
+
+
+## GET /daily-seed -> {"date", "seed"} or null.
+func daily_seed(done: Callable = Callable()) -> Variant:
+	var r: Variant = await request_json(HTTPClient.METHOD_GET, "/daily-seed")
+	var out: Variant = r if r is Dictionary and (r as Dictionary).has("seed") else null
+	_finish(done, out)
+	return out
+
+
+## GET /cards: newer card data from the server. Falls back to the bundled copy when offline.
+func refresh_cards() -> void:
+	var r: Variant = await request_json(HTTPClient.METHOD_GET, "/cards")
+	if r is Dictionary and int((r as Dictionary).get("version", 0)) >= GameData.cards_version:
+		GameData.apply_cards(r)
+
+
+## POST /run -> {"id", "rank"}, or null when offline / rejected.
+func submit_run(payload: Dictionary, done: Callable = Callable()) -> Variant:
+	var r: Variant = await request_json(HTTPClient.METHOD_POST, "/run", payload)
+	var out: Variant = r if r is Dictionary and (r as Dictionary).has("rank") else null
+	_finish(done, out)
+	return out
+
+
+## GET /leaderboard -> Array of {rank, player_name, won, battles_won, time_ms}, or null.
+func leaderboard(daily: bool = false, limit: int = 10, done: Callable = Callable()) -> Variant:
+	var path := "/leaderboard?daily=%s&limit=%d" % ["true" if daily else "false", limit]
+	var r: Variant = await request_json(HTTPClient.METHOD_GET, path)
+	var out: Variant = r if r is Array else null
+	_finish(done, out)
+	return out
+
+
+func _finish(done: Callable, value: Variant) -> void:
+	if done.is_valid():
+		done.call(value)
 
 
 func _set_online(value: bool) -> void:
