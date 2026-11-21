@@ -4,8 +4,47 @@ extends GutTest
 const DECK := ["num_1", "num_2", "num_3", "drink_me", "teacup", "eat_me"]
 
 
-func test_spade_dig_buries_the_top_of_your_deck() -> void:
+## Dig and Pilfer are the Queen's tricks now; test them on a stand-in soldier.
+func _soldier_with(kind: String, deck: Array = [], hand: Array = []) -> BattleState:
+	var b := TestHelpers.battle("spade_soldier", deck, hand)
+	b.enemy_def = b.enemy_def.duplicate(true)
+	b.enemy_def["surprise"] = kind
+	b.enemy_def["surprise_params"] = {}
+	return b
+
+
+func test_spade_attack_adds_1_to_your_total() -> void:
 	var b := TestHelpers.battle("spade_soldier", DECK)
+	TestHelpers.set_table(b.player, ["10", "6"])
+	b.fire_surprise()
+	assert_eq(b.player.total(), 17)
+
+
+func test_diamond_attack_takes_5_off_your_total() -> void:
+	var b := TestHelpers.battle("diamond_soldier", DECK)
+	TestHelpers.set_table(b.player, ["10", "6"])
+	var said: Array[String] = []
+	b.message.connect(func(text: String) -> void: said.append(text))
+	b.fire_surprise()
+	assert_eq(b.player.total(), 11, "the -5 isn't clamped to 0")
+	assert_eq(said, ["5 off your total!"] as Array[String])
+
+
+func test_diamond_attack_can_pull_you_back_from_a_bust() -> void:
+	var b := TestHelpers.battle("diamond_soldier", DECK)
+	TestHelpers.set_table(b.player, ["10", "9", "5"])
+	b.fire_surprise()
+	assert_eq(b.player.total(), 19)
+
+
+func test_real_cards_still_never_go_below_zero() -> void:
+	var c := Card.blind("2", "spades")
+	c.modifier = -3
+	assert_eq(c.value(), 0)
+
+
+func test_dig_buries_the_top_of_your_deck() -> void:
+	var b := _soldier_with("dig", DECK)
 	var top := b.player_deck.top()
 	assert_eq(b.fire_surprise(), "dig")
 	assert_eq(b.player_deck.draw_pile[0], top)
@@ -28,15 +67,15 @@ func test_bonk_can_bust_you_even_after_staying() -> void:
 	assert_eq(b.player.total(), 22)
 
 
-func test_diamond_pilfer_steals_a_hand_card() -> void:
-	var b := TestHelpers.battle("diamond_soldier", [], ["num_1", "teacup", "eat_me"])
+func test_pilfer_steals_a_hand_card() -> void:
+	var b := _soldier_with("pilfer", [], ["num_1", "teacup", "eat_me"])
 	assert_eq(b.fire_surprise(), "pilfer")
 	assert_eq(b.hand.size(), 2)
 	assert_eq(b.stolen.size(), 1)
 
 
 func test_pilfer_with_an_empty_hand_does_nothing() -> void:
-	var b := TestHelpers.battle("diamond_soldier")
+	var b := _soldier_with("pilfer")
 	b.fire_surprise()
 	assert_eq(b.stolen.size(), 0)
 
@@ -50,13 +89,13 @@ func test_heart_off_with_it_removes_your_last_card() -> void:
 	assert_eq(b.hit_deck.discard_pile.size(), 1)
 
 
-func test_heart_soldier_heals_3_when_it_wins_a_round() -> void:
+func test_heart_soldier_heals_1_when_it_wins_a_round() -> void:
 	var b := TestHelpers.battle("heart_soldier", DECK)
 	b.enemy.hp = 10
 	TestHelpers.set_table(b.player, ["10", "7"])
 	TestHelpers.set_table(b.enemy, ["10", "9"])
 	b.resolve_round()
-	assert_eq(b.enemy.hp, 13)
+	assert_eq(b.enemy.hp, 11)
 
 
 func test_hedgehog_shield_blocks_the_next_attack() -> void:
