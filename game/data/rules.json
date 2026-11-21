@@ -34,10 +34,15 @@
     "tie_favors_player": false
   },
   "run": {
-    "gold_per_soldier": 10,
+    "gold_per_soldier": 20,
     "heal_after_win": 5,
     "reward_choices": 3,
     "rarity_weights": { "common": 60, "uncommon": 30, "rare": 10 },
     "trinket_after_battle": 2
+  },
+  "shop": {
+    "prices": { "common": 10, "uncommon": 15, "rare": 25 },
+    "remove_price": 5,
+    "min_deck": 6
   }
 }

@@ -37,9 +37,10 @@ func test_new_run_starts_fresh() -> void:
 func test_winning_a_battle_pays_gold_and_heals_5() -> void:
 	RunState.new_run(1)
 	RunState.hp = 20
+	var per_win := int(GameData.rule("run.gold_per_soldier", 0))
 	var r: Dictionary = RunState.record_win("club_soldier")
-	assert_eq(r["gold"], 10)
-	assert_eq(RunState.gold, 10)
+	assert_eq(r["gold"], per_win)
+	assert_eq(RunState.gold, per_win)
 	assert_eq(RunState.hp, 25)
 	assert_eq(RunState.battle_index, 1)
 	assert_eq(RunState.scene_after_battle(), RunState.REWARD_SCENE)
@@ -47,7 +48,8 @@ func test_winning_a_battle_pays_gold_and_heals_5() -> void:
 
 func test_diamond_soldier_drops_extra_gold() -> void:
 	RunState.new_run(1)
-	assert_eq(RunState.record_win("diamond_soldier")["gold"], 20)
+	var per_win := int(GameData.rule("run.gold_per_soldier", 0))
+	assert_eq(RunState.record_win("diamond_soldier")["gold"], per_win + int(GameData.enemy("diamond_soldier")["bonus_gold"]))
 
 
 func test_no_full_heals() -> void:
