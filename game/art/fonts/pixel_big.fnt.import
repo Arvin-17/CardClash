@@ -1,0 +1,17 @@
+[remap]
+
+importer="font_data_bmfont"
+type="FontFile"
+uid="uid://h2pe1avrbv25"
+path="res://.godot/imported/pixel_big.fnt-862c9ac7f4f8adea4a2b5e4321fb067c.fontdata"
+
+[deps]
+
+source_file="res://art/fonts/pixel_big.fnt"
+dest_files=["res://.godot/imported/pixel_big.fnt-862c9ac7f4f8adea4a2b5e4321fb067c.fontdata"]
+
+[params]
+
+fallbacks=[]
+compress=true
+scaling_mode=2
