@@ -60,8 +60,13 @@ jobs:
       - name: Unit tests (GUT)
         run: godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
 
-      - name: Smoke run (main menu, then a battle)
+      - name: Smoke run (main menu)
         run: |
           godot --headless --fixed-fps 60 --quit-after 600 2>&1 | tee /tmp/menu.log
-          godot --headless --fixed-fps 60 --quit-after 3600 res://scenes/battle.tscn 2>&1 | tee /tmp/battle.log
-          if grep -E "SCRIPT ERROR|Parse Error" /tmp/menu.log /tmp/battle.log; then exit 1; fi
+          if grep -E "SCRIPT ERROR|Parse Error" /tmp/menu.log; then exit 1; fi
+
+      - name: Smoke run (a full battle played by the autoplay bot)
+        run: |
+          godot --headless --fixed-fps 60 --quit-after 30000 res://scenes/battle.tscn -- --autoplay 2>&1 | tee /tmp/battle.log
+          if grep -E "SCRIPT ERROR|Parse Error" /tmp/battle.log; then exit 1; fi
+          grep -q "SMOKE battle" /tmp/battle.log || { echo "the battle never finished"; exit 1; }

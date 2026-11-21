@@ -5,6 +5,7 @@ extends Node
 signal battle_started(enemy_id: String)
 signal round_started(round_number: int)
 signal card_dealt(who: String, card: Card)
+signal card_removed(who: String, card: Card)
 signal card_played(card: Card)
 signal total_changed(who: String, total: int)
 signal hand_changed()
