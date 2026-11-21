@@ -365,6 +365,8 @@ def export_sfx() -> None:
     save_wav("victory", mix(*[tone(f, f, 0.14, "square", 0.18, i * 0.1) for i, f in enumerate([392, 523, 659, 784, 1047])]))
     save_wav("defeat", mix(*[tone(f, f * 0.98, 0.3, "triangle", 0.3, i * 0.22) for i, f in enumerate([392, 330, 262, 196])]))
     save_wav("click", tone(660, 990, 0.04, "square", 0.15))
+    # Two sharp beeps: an attack is about to land.
+    save_wav("warning", mix(tone(988, 988, 0.07, "square", 0.25), tone(988, 988, 0.07, "square", 0.25, 0.13)))
 
 
 def main() -> None:
