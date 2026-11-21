@@ -16,6 +16,8 @@ var rank: String = ""
 var suit: String = ""
 var base_value: int = 0
 var modifier: int = 0
+## Enemy pseudo-cards (like the Diamond Soldier's -5) keep their sign; real cards never go below 0.
+var signed: bool = false
 var is_ace: bool = false
 ## The cards.json entry for built-deck cards.
 var def: Dictionary = {}
@@ -48,11 +50,14 @@ static func pseudo(card_id: String, amount: int) -> Card:
 	var c := Card.new()
 	c.id = card_id
 	c.base_value = amount
+	c.signed = true
 	return c
 
 
 ## This card's own value (an ace counts 11 here; Rules.total() drops aces to 1 when needed).
 func value() -> int:
+	if signed:
+		return base_value + modifier
 	return maxi(0, base_value + modifier)
 
 
