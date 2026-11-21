@@ -117,7 +117,7 @@ func test_cheshire_grin_sometimes_ignores_attacks() -> void:
 	watch_signals(b)
 	for i in 40:
 		b.fire_surprise()
-	var blocked := get_signal_emit_count(b, "surprise_blocked")
+	var blocked: int = get_signal_emit_count(b, "surprise_blocked")
 	assert_between(blocked, 2, 25, "roughly a quarter of 40")
 
 
