@@ -80,6 +80,4 @@ func test_every_card_in_cards_json_has_an_effect_script() -> void:
 	for id: String in TestHelpers.card_defs():
 		var def: Dictionary = TestHelpers.card_defs()[id]
 		var effect_name := str(def["effect"])
-		if effect_name in ["copy_enemy", "wild", "discard_card", "shield", "hide_total", "crit_boost", "duplicate", "heal"]:
-			continue  # reward-pool effects land in phase 4
 		assert_not_null(EffectRegistry.card_effect(effect_name), "missing script for %s" % effect_name)
