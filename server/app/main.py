@@ -9,10 +9,13 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from .card_data import CardData
 from .config import Settings, get_settings
 from .db import create_tables, make_engine
+from .limits import limiter
 from .routers import cards, daily, leaderboard, runs
 from .schemas import Health
 
@@ -36,6 +39,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         lifespan=lifespan,
     )
     app.state.settings = settings
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
     # The web build runs on another domain (itch.io), so CORS must list its origin.
     app.add_middleware(
         CORSMiddleware,

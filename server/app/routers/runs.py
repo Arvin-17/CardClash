@@ -5,6 +5,7 @@ from sqlalchemy import case, func
 from sqlmodel import select
 
 from ..db import SessionDep, TodayDep
+from ..limits import limiter, run_limit
 from ..models import DailySeed, Run
 from ..ranking import rank_of
 from ..schemas import CardCount, RunCreated, RunIn, Stats
@@ -21,6 +22,7 @@ def _reject(msg: str) -> HTTPException:
 
 
 @router.post("/run", response_model=RunCreated, status_code=status.HTTP_201_CREATED)
+@limiter.limit(run_limit)
 def submit_run(body: RunIn, request: Request, session: SessionDep, today: TodayDep) -> RunCreated:
     """Submit a finished run. Returns its id and rank so the ending can say "You placed #3 today!"."""
     settings = request.app.state.settings
