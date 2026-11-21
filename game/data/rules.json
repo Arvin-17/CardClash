@@ -7,22 +7,24 @@
   },
   "starter_deck": ["num_1", "num_1", "num_2", "num_2", "num_3", "num_3", "drink_me", "drink_me", "teacup", "eat_me"],
   "round": {
-    "seconds": 15,
+    "seconds": 10,
     "blind_cards_dealt": 2,
     "hand_draw_to": 3,
     "hand_max": 5,
-    "plays_per_round": 2,
-    "resolve_pause_seconds": 1.5
+    "plays_per_round": 0,
+    "resolve_pause_seconds": 1.0
   },
   "ai": {
     "tick_seconds": 0.5,
     "reaction_min_seconds": 1.0,
     "reaction_max_seconds": 2.0,
     "risk_max_total": 18,
-    "reads_player_total": true
+    "reads_player_total": true,
+    "hurry_when_player_ready": true
   },
   "surprise": {
-    "pause_seconds": 1.0
+    "pause_seconds": 1.0,
+    "warn_seconds": 2.0
   },
   "damage": {
     "messy_round": 2,

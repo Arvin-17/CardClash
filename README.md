@@ -1,17 +1,17 @@
 # CardClash
 
-CardClash is a pixel-art card battler built for a Wonderland-themed hackathon. You fall into a deck of cards and fight through waves of card-soldier enemies in fast blackjack rounds. Hit, stay, or play a special card from your hand. Whoever ends closer to 21 deals the damage. Enemies can strike before, during, or after your turn. It has a retro look.
+CardClash is a pixel-art card battler built for a Wonderland-themed hackathon. You fall into a deck of cards and fight through waves of card-soldier enemies in fast blackjack rounds. Hit, play special cards from your hand whenever you like, and hit READY when you are happy with your total. Whoever ends closer to 21 deals the damage. Enemies can strike before, during, or after your turn. It has a retro look.
 
 Win the run and the Queen of Hearts loses her head; lose, and Alice does.
 
 ## How a round works
 
 - Each round, you and the enemy get 2 cards from the shared **blind deck** (a standard 52). Your hand draws up to 3 cards from your own **built deck**.
-- You have 15 seconds:
+- You have 10 seconds:
   - **Hit**: draw a blind card.
-  - **Stay**: lock your total.
-  - **Play**: play up to 2 hand cards (numbers 1–4, or effects like Drink Me).
-- The enemy plays on its own clock. Its **intent bar** fills toward a surprise attack.
+  - **Play**: play any of your hand cards, as many as you like, whenever you like (numbers 1–4, or effects like Drink Me).
+  - **Ready**: lock your total. The enemy stops stalling and finishes its turn right away.
+- The enemy plays on its own clock. Its **intent bar** fills toward a surprise attack. In the last 2 seconds before one lands, the enemy flashes red with a **!** and a warning beep plays. You never see the attack's name, only what it did to you.
 - Closer to 21 wins: the loser takes the difference plus the winner's base attack. Exactly 21 is a critical (×2). Busting costs you `total − 21` plus the enemy's attack.
 
 ## Repo layout
@@ -31,7 +31,7 @@ Win the run and the Queen of Hearts loses her head; lose, and Alice does.
 | `cards.json` | Every card: `id, name, type, value, rarity, pool, effect, params, art, anim, text` |
 | `enemies.json` | The four suit soldiers and the Queen: HP, attack, AI numbers, surprise attack |
 | `acts.json` | Act 3, The Queen's Court: 4 shuffled soldiers, then the Queen |
-| `rules.json` | Every tunable number: HP, timer, plays per round, damage table, gold, rewards |
+| `rules.json` | Every tunable number: HP, timer, plays per round (0 = no limit), attack warning time, damage table, gold, rewards |
 | `trinkets.json` | Passive items (stretch goal) |
 
 ## Run the API locally
@@ -69,7 +69,7 @@ Stretch extras: `DELETE /run/{id}` with an `X-Admin-Key` header, and `GET /board
 1. Install [Godot 4.7](https://godotengine.org/download) (standard build, not .NET).
 2. Open `game/project.godot` and press **F5**. Any scene also runs on its own with **F6**.
 3. Controls:
-   - **H** hit, **S** stay, **1–5** play a hand card, **M** mute
+   - **H** hit, **Space** ready (or **S**), **1–5** play a hand card, **M** mute
    - debug builds only: **F1** overlay, **F2** instant win, **F3** print seed
 4. The game talks to the API at `http://127.0.0.1:8000` by default. To point it elsewhere, run `godot --path game -- --api=https://...`, or edit `cardclash/api/base_url` in Project Settings. Offline, everything still works except the leaderboard and the daily run.
 

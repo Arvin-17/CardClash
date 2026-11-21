@@ -2,7 +2,7 @@ extends Node
 ## Sound effects, driven entirely by Events: logic never knows audio exists.
 ## M toggles mute. Sounds live in res://audio (placeholders from tools/export_art.py).
 
-const SOUNDS := ["deal", "hit", "play", "bust", "win_round", "lose_round", "critical", "surprise", "blocked", "victory", "defeat", "click"]
+const SOUNDS := ["deal", "hit", "play", "bust", "win_round", "lose_round", "critical", "surprise", "blocked", "victory", "defeat", "click", "warning"]
 
 var muted: bool = false
 var _streams: Dictionary = {}
@@ -21,6 +21,7 @@ func _ready() -> void:
 		_players.append(p)
 	Events.card_dealt.connect(func(_who: String, _card: Card) -> void: play("deal"))
 	Events.card_played.connect(func(_card: Card) -> void: play("play"))
+	Events.attack_incoming.connect(func(_id: String) -> void: play("warning"))
 	Events.surprise_attack.connect(func(_id: String, _kind: String) -> void: play("surprise"))
 	Events.surprise_blocked.connect(func(_id: String, _kind: String) -> void: play("blocked"))
 	Events.boss_phase_changed.connect(func(_phase: int) -> void: play("surprise"))

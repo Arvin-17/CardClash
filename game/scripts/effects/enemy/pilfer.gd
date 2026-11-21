@@ -14,4 +14,4 @@ func apply(battle: BattleState, _params: Dictionary) -> void:
 	battle.hand.remove_at(index)
 	battle.stolen.append(stolen)
 	battle.hand_changed.emit()
-	battle.message.emit("PILFER! %s was stolen." % stolen.display_name())
+	battle.message.emit("Your %s was stolen!" % stolen.display_name())

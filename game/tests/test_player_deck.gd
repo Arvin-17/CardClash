@@ -34,7 +34,16 @@ func test_round_draws_the_hand_up_to_three() -> void:
 	var b := TestHelpers.battle("club_soldier", STARTER)
 	b.start_round()
 	assert_eq(b.hand.size(), 3)
-	assert_eq(b.plays_left, 2)
+	assert_eq(b.plays_left, -1, "plays_per_round 0 means no limit")
+
+
+func test_play_cards_at_will_when_there_is_no_limit() -> void:
+	var b := TestHelpers.battle("club_soldier", [], ["num_1", "num_1", "num_1", "num_2"])
+	TestHelpers.set_table(b.player, ["5", "4"])
+	for _i in 4:
+		assert_true(b.play_card(0))
+	assert_eq(b.hand.size(), 0)
+	assert_eq(b.player.total(), 14)
 
 
 func test_unplayed_cards_carry_over_and_the_hand_caps_at_five() -> void:
@@ -46,8 +55,9 @@ func test_unplayed_cards_carry_over_and_the_hand_caps_at_five() -> void:
 	assert_eq(b.hand.size(), 5, "never more than 5")
 
 
-func test_only_two_plays_per_round() -> void:
+func test_a_configured_play_limit_still_works() -> void:
 	var b := TestHelpers.battle("club_soldier", [], ["num_1", "num_1", "num_1"])
+	b.plays_left = 2
 	TestHelpers.set_table(b.player, ["5", "4"])
 	assert_true(b.play_card(0))
 	assert_true(b.play_card(0))

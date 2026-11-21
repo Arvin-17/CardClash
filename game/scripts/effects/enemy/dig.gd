@@ -7,4 +7,4 @@ func apply(battle: BattleState, _params: Dictionary) -> void:
 		return
 	var buried := battle.player_deck.bury_top()
 	if buried != null:
-		battle.message.emit("DIG! Your %s was buried." % buried.display_name())
+		battle.message.emit("Your %s was buried in your deck!" % buried.display_name())

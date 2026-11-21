@@ -23,6 +23,8 @@ func _set_table(c: Combatant, ranks: Array) -> void:
 func test_rules_file_has_the_starting_values() -> void:
 	assert_eq(int(rules["player"]["max_hp"]), 30)
 	assert_eq(int(rules["player"]["base_attack"]), 3)
+	assert_eq(int(rules["round"]["seconds"]), 10, "short rounds")
+	assert_eq(int(rules["round"]["plays_per_round"]), 0, "play cards at will")
 
 
 func test_deal_gives_two_blind_cards_each() -> void:

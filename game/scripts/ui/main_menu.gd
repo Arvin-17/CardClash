@@ -37,7 +37,7 @@ func _ready() -> void:
 	_name.text_submitted.connect(func(_t: String) -> void: _name.release_focus())
 	add_child(_name)
 
-	_center(Palette.label("H HIT   S STAY   1-5 PLAY A CARD", Palette.GREEN), 214)
+	_center(Palette.label("H HIT   SPACE READY   1-5 PLAY ANY CARD", Palette.GREEN), 214)
 	_status = Palette.label("CHECKING SERVER...", Palette.GREEN)
 	_status.position = Vector2(4, 260)
 	add_child(_status)
