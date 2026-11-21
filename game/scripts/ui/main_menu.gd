@@ -42,7 +42,7 @@ func _ready() -> void:
 	_name.text_submitted.connect(func(_t: String) -> void: _name.release_focus())
 	add_child(_name)
 
-	_center(Palette.shadow_label("H HIT   SPACE READY   E HEAL   1-5 CARDS (2 PER ROUND)", Palette.GOLD_HI), 246)
+	_center(Palette.shadow_label("H HIT   SPACE STAND   E HEAL   1-5 CARDS (2 PER ROUND)", Palette.GOLD_HI), 246)
 	_status = Palette.shadow_label("CHECKING SERVER...", Palette.LAVENDER)
 	_status.position = Vector2(4, 260)
 	add_child(_status)
