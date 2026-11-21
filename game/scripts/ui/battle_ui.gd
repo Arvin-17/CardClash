@@ -6,26 +6,44 @@ extends Control
 
 var _enemy_row: HBoxContainer
 var _player_row: HBoxContainer
+var _hand_row: HBoxContainer
 var _enemy_total: Label
 var _player_total: Label
 var _enemy_name: Label
 var _enemy_hp: Label
+var _enemy_attack: Label
 var _player_hp: Label
 var _round: Label
 var _message: Label
+var _plays: Label
+var _peek: Label
+var _counts: Label
+var _timer_bar: ColorRect
+var _timer_label: Label
+var _intent_bar: ColorRect
 var _hit: Button
 var _stay: Button
 var _overlay: Panel
 var _overlay_title: Label
 var _overlay_button: Button
 
+const TIMER_W := 200.0
+const INTENT_W := 48.0
+
 
 func _ready() -> void:
 	_build()
 	Events.round_started.connect(_on_round_started)
 	Events.card_dealt.connect(func(_who: String, _card: Card) -> void: _refresh())
+	Events.card_removed.connect(func(_who: String, _card: Card) -> void: _refresh())
 	Events.total_changed.connect(func(_who: String, _total: int) -> void: _refresh())
+	Events.hand_changed.connect(_refresh)
 	Events.hp_changed.connect(_on_hp_changed)
+	Events.timer_changed.connect(_on_timer_changed)
+	Events.intent_changed.connect(_on_intent_changed)
+	Events.peeked.connect(_on_peeked)
+	Events.surprise_attack.connect(_on_surprise)
+	Events.surprise_blocked.connect(func(_id: String, kind: String) -> void: _flash("BLOCKED %s!" % kind.to_upper().replace("_", " ")))
 	Events.round_resolved.connect(_on_round_resolved)
 	Events.message.connect(func(text: String) -> void: _message.text = text)
 	Events.battle_won.connect(func(_id: String) -> void: _show_end(true))
@@ -39,47 +57,77 @@ func _build() -> void:
 	add_child(bg)
 	var felt := Panel.new()
 	felt.add_theme_stylebox_override("panel", Palette.box(Palette.GREEN, Palette.CREAM))
-	felt.position = Vector2(8, 80)
-	felt.size = Vector2(464, 104)
+	felt.position = Vector2(8, 84)
+	felt.size = Vector2(464, 98)
 	add_child(felt)
 
-	# Enemy across the table (placeholder portrait until the designer's sprite lands).
+	# Top bar: round, timer, blind deck.
+	_round = _label(Vector2(6, 4), "ROUND 1", Palette.CREAM)
+	var timer_bg := ColorRect.new()
+	timer_bg.color = Palette.GREEN
+	timer_bg.position = Vector2(140, 5)
+	timer_bg.size = Vector2(TIMER_W, 4)
+	add_child(timer_bg)
+	_timer_bar = ColorRect.new()
+	_timer_bar.color = Palette.CREAM
+	_timer_bar.position = timer_bg.position
+	_timer_bar.size = timer_bg.size
+	add_child(_timer_bar)
+	_timer_label = _label(Vector2(344, 4), "15", Palette.CREAM)
+	_counts = _label(Vector2(370, 4), "", Palette.GREEN)
+
+	# The enemy across the table (placeholder portrait until the designer's sprite lands).
 	var portrait := ColorRect.new()
 	portrait.color = Palette.RED
-	portrait.position = Vector2(216, 18)
+	portrait.position = Vector2(216, 16)
 	portrait.size = Vector2(48, 56)
 	add_child(portrait)
-	_enemy_name = _label(Vector2(120, 24), "", Palette.CREAM)
-	_enemy_hp = _label(Vector2(120, 34), "", Palette.RED)
+	var intent_bg := ColorRect.new()
+	intent_bg.color = Palette.GREEN
+	intent_bg.position = Vector2(216, 75)
+	intent_bg.size = Vector2(INTENT_W, 3)
+	add_child(intent_bg)
+	_intent_bar = ColorRect.new()
+	_intent_bar.color = Palette.RED
+	_intent_bar.position = intent_bg.position
+	_intent_bar.size = Vector2(0, 3)
+	add_child(_intent_bar)
+	_enemy_name = _label(Vector2(100, 22), "", Palette.CREAM)
+	_enemy_hp = _label(Vector2(100, 32), "", Palette.RED)
+	_enemy_attack = _label(Vector2(272, 22), "", Palette.GREEN)
 
-	_round = _label(Vector2(6, 4), "ROUND 1", Palette.CREAM)
-	_enemy_row = _row(Vector2(180, 86))
-	_enemy_total = _label(Vector2(360, 96), "", Palette.CREAM)
-	_message = _label(Vector2(0, 126), "", Palette.CREAM)
+	_enemy_row = _row(Vector2(170, 90))
+	_enemy_total = _label(Vector2(372, 100), "", Palette.CREAM)
+	_message = _label(Vector2(0, 127), "", Palette.CREAM)
 	_message.size = Vector2(480, 8)
 	_message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_player_row = _row(Vector2(180, 146))
-	_player_total = _label(Vector2(360, 156), "", Palette.CREAM)
-	_player_hp = _label(Vector2(8, 240), "", Palette.RED)
+	_player_row = _row(Vector2(170, 144))
+	_player_total = _label(Vector2(372, 154), "", Palette.CREAM)
+	_peek = _label(Vector2(16, 154), "", Palette.CREAM)
 
+	# Alice's hand and actions.
+	_hand_row = _row(Vector2(8, 190))
+	_hand_row.add_theme_constant_override("separation", 4)
+	_player_hp = _label(Vector2(8, 252), "", Palette.RED)
+	_plays = _label(Vector2(120, 252), "", Palette.CREAM)
 	_hit = _button(Vector2(330, 236), "HIT [H]", controller.hit)
 	_stay = _button(Vector2(400, 236), "STAY [S]", controller.stay)
 
 	_overlay = Panel.new()
 	_overlay.add_theme_stylebox_override("panel", Palette.box(Palette.BLACK, Palette.CREAM))
-	_overlay.position = Vector2(140, 90)
-	_overlay.size = Vector2(200, 80)
+	_overlay.position = Vector2(120, 86)
+	_overlay.size = Vector2(240, 80)
 	_overlay.visible = false
 	add_child(_overlay)
 	_overlay_title = Palette.label("", Palette.CREAM, true)
 	_overlay_title.position = Vector2(0, 14)
-	_overlay_title.size = Vector2(200, 16)
+	_overlay_title.size = Vector2(240, 16)
 	_overlay_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_overlay.add_child(_overlay_title)
 	_overlay_button = Button.new()
-	_overlay_button.text = "CONTINUE"
-	_overlay_button.position = Vector2(60, 50)
-	_overlay_button.size = Vector2(80, 16)
+	_overlay_button.text = "CONTINUE [ENTER]"
+	_overlay_button.position = Vector2(64, 50)
+	_overlay_button.size = Vector2(112, 16)
 	_overlay_button.pressed.connect(_on_continue)
 	_overlay.add_child(_overlay_button)
 
@@ -123,6 +171,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			controller.hit()
 		KEY_S:
 			controller.stay()
+		KEY_1, KEY_2, KEY_3, KEY_4, KEY_5:
+			controller.play(key.keycode - KEY_1)
 		KEY_ENTER, KEY_SPACE:
 			if _overlay.visible:
 				_on_continue()
@@ -131,6 +181,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func _on_round_started(n: int) -> void:
 	_round.text = "ROUND %d" % n
 	_message.text = ""
+	_peek.text = ""
 	_refresh()
 
 
@@ -141,13 +192,33 @@ func _refresh() -> void:
 	_fill(_enemy_row, b.enemy.table)
 	_fill(_player_row, b.player.table)
 	_enemy_name.text = b.enemy.display_name.to_upper()
+	_enemy_attack.text = "ATK %d  STAYS %d" % [b.enemy.base_attack, b.enemy_stay_at]
 	_enemy_total.text = "= %d" % b.enemy.total(b.target)
 	var pt := b.player.total(b.target)
 	_player_total.text = "= %d%s" % [pt, "  BUST" if pt > b.target else ""]
 	_player_total.add_theme_color_override("font_color", Palette.RED if pt > b.target else Palette.CREAM)
+	_plays.text = "PLAYS LEFT %d   DECK %d" % [b.plays_left, b.player_deck.count() if b.player_deck else 0]
+	_counts.text = _count_text(b.hit_deck)
 	var can_act := controller.state == BattleController.State.ROUND_ACTIVE and not b.player.stayed
 	_hit.disabled = not can_act
 	_stay.disabled = not can_act
+	for child in _hand_row.get_children():
+		child.queue_free()
+	for i in b.hand.size():
+		var v := HandCardView.new()
+		v.show_card(b.hand[i], i, can_act and b.can_play(i))
+		v.pressed.connect(controller.play.bind(i, {}))
+		v.mouse_entered.connect(func() -> void: _message.text = v.tooltip_text)
+		_hand_row.add_child(v)
+
+
+## Card counting: how many 10-value and low cards are still unseen in the blind deck.
+func _count_text(deck: HitDeck) -> String:
+	var counts := deck.remaining_by_value()
+	var low := 0
+	for v in range(2, 7):
+		low += int(counts.get(v, 0))
+	return "BLIND %d  10S %d  LOW %d" % [deck.remaining(), int(counts.get(10, 0)), low]
 
 
 func _fill(row: HBoxContainer, cards: Array[Card]) -> void:
@@ -164,6 +235,33 @@ func _on_hp_changed(who: String, hp: int, max_hp: int) -> void:
 		_player_hp.text = "ALICE HP %d/%d" % [hp, max_hp]
 	else:
 		_enemy_hp.text = "HP %d/%d" % [hp, max_hp]
+
+
+func _on_timer_changed(seconds_left: float) -> void:
+	var total := float(GameData.rule("round.seconds", 15))
+	_timer_bar.size.x = roundf(TIMER_W * clampf(seconds_left / total, 0.0, 1.0))
+	_timer_label.text = str(ceili(seconds_left))
+
+
+func _on_intent_changed(_enemy_id: String, percent: float) -> void:
+	_intent_bar.size.x = roundf(INTENT_W * percent)
+
+
+func _on_peeked(card: Card) -> void:
+	if card:
+		_peek.text = "NEXT: %s%s" % [card.face(), Palette.SUIT_GLYPH.get(card.suit, "")]
+
+
+func _on_surprise(_enemy_id: String, kind: String) -> void:
+	_flash(kind.to_upper().replace("_", " ") + "!")
+
+
+func _flash(text: String) -> void:
+	if _message.text.is_empty():
+		_message.text = text
+	var tween := create_tween()
+	_message.modulate = Palette.RED
+	tween.tween_property(_message, "modulate", Color.WHITE, 0.6)
 
 
 func _on_round_resolved(r: Dictionary) -> void:
