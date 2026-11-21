@@ -44,6 +44,7 @@ const INTENT_W := 48.0
 func _ready() -> void:
 	_build()
 	Events.round_started.connect(_on_round_started)
+	Events.battle_phase_changed.connect(func(_phase: int) -> void: _refresh())
 	Events.card_dealt.connect(func(_who: String, _card: Card) -> void: _refresh())
 	Events.card_removed.connect(func(_who: String, _card: Card) -> void: _refresh())
 	Events.total_changed.connect(func(_who: String, _total: int) -> void: _refresh())
@@ -247,7 +248,8 @@ func _refresh() -> void:
 	_player_total.text = "= %d%s" % [pt, "  BUST" if pt > b.target else ""]
 	_player_total.add_theme_color_override("font_color", Palette.RED if pt > b.target else Palette.CREAM)
 	var deck_text := "DECK %d" % (b.player_deck.count() if b.player_deck else 0)
-	_plays.text = deck_text if b.plays_left < 0 else "PLAYS LEFT %d   %s" % [b.plays_left, deck_text]
+	_plays.text = deck_text if b.plays_per_round <= 0 else "CARDS %d/%d   %s" % [b.cards_played, b.plays_per_round, deck_text]
+	_plays.add_theme_color_override("font_color", Palette.RED if b.at_play_limit() else Palette.CREAM)
 	_counts.text = _count_text(b.hit_deck)
 	var flags: Array[String] = []
 	if b.shield > 0:
@@ -264,14 +266,14 @@ func _refresh() -> void:
 			b.player.total(b.target), b.enemy.total(b.target), EnemyAI.preview(b),
 			int(100.0 * (1.0 - controller.intent_timer.time_left / maxf(controller.intent_timer.wait_time, 0.01))),
 			str(b.hit_deck.remaining_by_value())]
-	var can_act := controller.state == BattleController.State.ROUND_ACTIVE and not b.player.stayed
+	var can_act := controller.can_act()
 	_hit.disabled = not can_act
 	_stay.disabled = not can_act
 	for child in _hand_row.get_children():
 		child.queue_free()
 	for i in b.hand.size():
 		var v := HandCardView.new()
-		v.show_card(b.hand[i], i, can_act and b.can_play(i))
+		v.show_card(b.hand[i], i)
 		v.pressed.connect(_request_play.bind(i))
 		v.mouse_entered.connect(func() -> void: _message.text = v.tooltip_text)
 		_hand_row.add_child(v)
@@ -307,9 +309,16 @@ func _set_portrait(enraged: bool) -> void:
 
 
 ## Cards that need a choice (Painted Rose's value, Mushroom's target and sign) open a chooser.
+## A play that can't happen says why instead of silently doing nothing.
 func _request_play(index: int) -> void:
 	var b := controller.battle
-	if b == null or index < 0 or index >= b.hand.size() or not b.can_play(index):
+	if b == null or index < 0 or index >= b.hand.size() or not controller.round_live():
+		return
+	if b.at_play_limit():
+		_say("ONLY %d CARDS PER ROUND!" % b.plays_per_round)
+		return
+	if not b.can_play(index):
+		_say("%s CAN'T BE PLAYED RIGHT NOW." % b.hand[index].display_name().to_upper())
 		return
 	var card: Card = b.hand[index]
 	var params := b.params_for(card)
@@ -443,6 +452,11 @@ func _process(delta: float) -> void:
 	_alert.visible = on
 	_portrait.modulate = Color(1.0, 0.45, 0.45) if on else Color.WHITE
 	_intent_bar.color = Palette.CREAM if on else Palette.RED
+
+
+func _say(text: String) -> void:
+	_message.text = text
+	_flash("")
 
 
 func _flash(text: String) -> void:
