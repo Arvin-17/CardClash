@@ -55,7 +55,7 @@ func test_busting_no_longer_ends_your_turn() -> void:
 	_set_table(b.player, ["10", "9"])
 	while not b.player.is_bust():
 		b.player_hit()
-	assert_false(b.player.stayed, "over 21 you can still play cards or ready up")
+	assert_false(b.player.stayed, "over 21 you can still play cards or stand")
 	assert_null(b.player_hit(), "but no more hits while you're over")
 
 

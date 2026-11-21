@@ -1,6 +1,6 @@
 # CardClash
 
-CardClash is a pixel-art card battler built for a Wonderland-themed hackathon. You fall into a deck of cards and fight through waves of card-soldier enemies in fast blackjack rounds. Hit, play up to 2 special cards a round from your hand whenever you like, and hit READY when you are happy with your total. Whoever ends closer to 21 deals the damage. Enemies can strike before, during, or after your turn. It has a retro look.
+CardClash is a pixel-art card battler built for a Wonderland-themed hackathon. You fall into a deck of cards and fight through waves of card-soldier enemies in fast blackjack rounds. Hit, play up to 2 special cards a round from your hand whenever you like, and hit STAND when you are happy with your total. Whoever ends closer to 21 deals the damage. Enemies can strike before, during, or after your turn. It has a retro look.
 
 Win the run and the Queen of Hearts loses her head; lose, and Alice does.
 
@@ -11,7 +11,7 @@ Win the run and the Queen of Hearts loses her head; lose, and Alice does.
   - **Hit**: draw a blind card (not while you're over 21).
   - **Play**: play up to **2 hand cards per round**, any time the round is live (numbers 1–4, or effects like Drink Me). Hand cards are never greyed out: a third play just tells you the limit. The count resets every round.
   - **Heal** (**E**): +3 HP, always available. It uses one of your 2 card plays.
-  - **Ready**: the round ends **right away**. The enemy plays out the rest of its turn instantly, then totals are compared.
+  - **Stand**: the round ends **right away**. The enemy plays out the rest of its turn instantly, then totals are compared.
 - **Busting doesn't end your turn.** Over 21 you can keep playing cards (like Drink Me) to get back under. But reaching **30** is a **super bust**: the round ends on the spot and you take double damage.
 - The enemy plays on its own clock. Its **intent bar** starts empty every round and fills toward one surprise attack (7.5 s in for soldiers, 6.5 s for the Queen). In the last 2 seconds before one lands, the enemy flashes red with a **!** and a warning beep plays. You never see the attack's name, only what it did to you.
 - **After each win, the Shop.** Your whole deck is on show. Buy as many of the 3 offered cards as you can afford (10 / 15 / 25 gold by rarity), and click a deck card twice to remove it for 5 gold, down to a 6-card minimum. Each soldier you beat pays 20 gold.
@@ -216,7 +216,7 @@ Stretch extras: `DELETE /run/{id}` with an `X-Admin-Key` header, and `GET /board
 1. Install [Godot 4.7](https://godotengine.org/download) (standard build, not .NET).
 2. Open `game/project.godot` and press **F5**. Any scene also runs on its own with **F6**.
 3. Controls:
-   - **H** hit, **Space** ready (or **S**), **E** heal, **1–5** play a hand card, **M** mute
+   - **H** hit, **Space** stand (or **S**), **E** heal, **1–5** play a hand card, **M** mute
    - debug builds only: **F1** overlay, **F2** instant win, **F3** print seed
 4. The game talks to the API at `http://127.0.0.1:8000` by default. To point it elsewhere, run `godot --path game -- --api=https://...`, or edit `cardclash/api/base_url` in Project Settings. Offline, everything still works except the leaderboard and the daily run.
 
