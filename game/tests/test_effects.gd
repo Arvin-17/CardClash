@@ -23,7 +23,7 @@ func test_eat_me_can_bust_you() -> void:
 	TestHelpers.set_table(b.player, ["10", "9"])
 	b.play_card(0)
 	assert_eq(b.player.total(), 22)
-	assert_true(b.player.stayed, "busting ends your turn")
+	assert_false(b.player.stayed, "a bust no longer ends your turn")
 
 
 func test_modify_value_needs_a_table_card() -> void:

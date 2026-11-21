@@ -23,6 +23,8 @@ static func decide(battle: BattleState) -> String:
 			return "play:%d" % i
 		if card.effect_name() == "peek" and battle.peeked_card == null:
 			return "play:%d" % i
+	if battle.can_heal() and battle.player.hp * 2 <= battle.player.max_hp:
+		return "heal"
 	if total < 17:
 		return "hit"
 	return "stay"
