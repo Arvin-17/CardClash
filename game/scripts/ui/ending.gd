@@ -2,7 +2,7 @@ extends Control
 ## The endings. Win: the world drains to grey, an axe shadow passes and the Queen's head
 ## flips into a card. Lose: "Off with her head!", the axe swings at you and your view drops.
 ## Both play the pixel-art sequences from game/art/anim (tools/sprites), then dim and show the
-## stats and leaderboard. Without the art, the old AnimationPlayer placeholders play instead.
+## stats. Without the art, the old AnimationPlayer placeholders play instead.
 
 @onready var anim: AnimationPlayer = $AnimationPlayer
 @onready var figure: Control = $Figure
@@ -58,7 +58,7 @@ func _ready() -> void:
 		anim.play("win" if won else "lose")
 		await anim.animation_finished
 	_stats.visible = true
-	_submit()
+	_finish()
 
 
 func _label(pos: Vector2, text: String, color: Color) -> Label:
@@ -68,50 +68,19 @@ func _label(pos: Vector2, text: String, color: Color) -> Label:
 	return l
 
 
-func _submit() -> void:
-	var payload: Dictionary = RunState.run_payload()
+## The run is over: show how it went and wait for Enter. Everything stays on this machine.
+func _finish() -> void:
+	var won := bool(RunState.outcome.get("won", false))
 	var demo := RunState.is_demo
 	RunState.end_run()
 	if demo:
-		_status.text = "QUEEN DEMO: NOT ON THE LEADERBOARD"
-		_board.text = "ENTER: MENU"
-		if Autoplay.enabled():
-			Autoplay.log_line("run %s (demo), battles won %d, rounds %d" % ["won" if payload["won"] else "lost", payload["battles_won"], payload["stats"]["rounds"]])
-			get_tree().quit()
-		return
-	_status.text = "SUBMITTING RUN..."
-	Api.submit_run(payload, _on_submitted.bind(payload))
-
-
-func _on_submitted(result: Variant, payload: Dictionary) -> void:
-	var won := bool(payload["won"])
-	if result is Dictionary:
-		var rank := int((result as Dictionary)["rank"])
-		_status.text = "YOU PLACED #%d%s!" % [rank, " TODAY" if payload["is_daily"] else ""]
-		_status.add_theme_color_override("font_color", Palette.RED)
+		_status.text = "QUEEN DEMO OVER"
 	else:
-		_status.text = "OFFLINE: RUN NOT SUBMITTED"
+		_status.text = "YOU BEAT THE QUEEN!" if won else "BETTER LUCK NEXT RUN"
+	_board.text = "ENTER: MENU"
 	if Autoplay.enabled():
-		Autoplay.log_line("run %s, battles won %d, rounds %d" % ["won" if won else "lost", payload["battles_won"], payload["stats"]["rounds"]])
+		Autoplay.log_line("run %s%s, battles won %d, rounds %d" % ["won" if won else "lost", " (demo)" if demo else "", RunState.battles_won, int(RunState.stats.get("rounds", 0))])
 		get_tree().quit()
-		return
-	_board.text = "LOADING LEADERBOARD..." if result is Dictionary else "ENTER: MENU"
-	if result is Dictionary:
-		Api.leaderboard(bool(payload["is_daily"]), 10, _on_board.bind(bool(payload["is_daily"])))
-
-
-func _on_board(entries: Variant, daily: bool) -> void:
-	if not (entries is Array):
-		_board.text = "ENTER: MENU"
-		return
-	var lines: Array[String] = ["TODAY'S TOP 10" if daily else "TOP 10"]
-	for e: Dictionary in entries:
-		var secs := int(e.get("time_ms", 0)) / 1000
-		var result := "QUEEN" if bool(e.get("won", false)) else "%d/%d" % [int(e.get("battles_won", 0)), RunState.total_battles()]
-		lines.append("%2d %-16s %-5s %d:%02d" % [int(e.get("rank", 0)), str(e.get("player_name", "")).to_upper(), result, secs / 60, secs % 60])
-	lines.append("")
-	lines.append("ENTER: MENU")
-	_board.text = "\n".join(lines)
 
 
 func _unhandled_input(event: InputEvent) -> void:
