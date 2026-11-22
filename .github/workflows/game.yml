@@ -80,3 +80,10 @@ jobs:
           godot --headless --fixed-fps 60 --quit-after 400000 -- --autoplay 2>&1 | tee /tmp/run.log
           if grep -E "SCRIPT ERROR|Parse Error|class instance is gone" /tmp/run.log; then exit 1; fi
           grep -q "SMOKE run" /tmp/run.log || { echo "the run never reached an ending"; exit 1; }
+
+      - name: Smoke run (demo mode, straight to the Queen, played by the autoplay bot)
+        run: |
+          godot --headless --fixed-fps 60 --quit-after 100000 -- --autoplay --demo 2>&1 | tee /tmp/demo.log
+          if grep -E "SCRIPT ERROR|Parse Error|class instance is gone" /tmp/demo.log; then exit 1; fi
+          grep -q "SMOKE battle .* vs queen_of_hearts" /tmp/demo.log || { echo "the demo never fought the Queen"; exit 1; }
+          grep -q "SMOKE run .*(demo)" /tmp/demo.log || { echo "the demo never reached an ending"; exit 1; }
