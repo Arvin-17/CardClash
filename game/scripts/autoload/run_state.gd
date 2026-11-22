@@ -10,6 +10,7 @@ const MAP_SCENE := "res://scenes/map.tscn"
 const BATTLE_SCENE := "res://scenes/battle.tscn"
 const REWARD_SCENE := "res://scenes/reward.tscn"
 const ENDING_SCENE := "res://scenes/ending.tscn"
+const HOWTO_SCENE := "res://scenes/how_to_play.tscn"
 
 var run_seed: int = 0
 var hp: int = 30
@@ -34,6 +35,8 @@ var outcome: Dictionary = {}
 ## A trinket found after the last win (shown on the reward screen), or "".
 var last_trinket: String = ""
 var player_name: String = "ALICE"
+## Has this player seen How to Play? It opens by itself on first launch until they have.
+var seen_how_to_play: bool = false
 
 var _elapsed_ms: int = 0
 var _segment_start: int = 0
@@ -344,8 +347,19 @@ func clear_save() -> void:
 func set_player_name(value: String) -> void:
 	var cleaned := value.strip_edges().left(16)
 	player_name = cleaned if not cleaned.is_empty() else "ALICE"
+	_save_setting("player", "name", player_name)
+
+
+func mark_how_to_play_seen() -> void:
+	seen_how_to_play = true
+	_save_setting("player", "seen_how_to_play", true)
+
+
+## Settings share one file: load it, change one key, save, so other keys survive.
+func _save_setting(section: String, key: String, value: Variant) -> void:
 	var cfg := ConfigFile.new()
-	cfg.set_value("player", "name", player_name)
+	cfg.load(SETTINGS_PATH)
+	cfg.set_value(section, key, value)
 	cfg.save(SETTINGS_PATH)
 
 
@@ -353,3 +367,4 @@ func _load_settings() -> void:
 	var cfg := ConfigFile.new()
 	if cfg.load(SETTINGS_PATH) == OK:
 		player_name = str(cfg.get_value("player", "name", "ALICE"))
+		seen_how_to_play = bool(cfg.get_value("player", "seen_how_to_play", false))
