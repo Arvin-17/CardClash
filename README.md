@@ -21,7 +21,7 @@ After every win you visit the shop. After an act's boss you fall down the rabbit
   - **Hit**: draw a blind card (not while you're over 21).
   - **Play**: play up to **2 hand cards per round**, any time the round is live (numbers 1–4, or effects like Drink Me). Hand cards are never greyed out: a third play just tells you the limit. The count resets every round.
   - **Heal** (**E**): +3 HP, always available. It uses one of your 2 card plays.
-  - **Stand**: the round ends **right away**. The enemy plays out the rest of its turn instantly, then totals are compared.
+  - **Stand**: the round ends **right away**. The enemy can't add another card: its total freezes where it is and the totals are compared. Stand fast and you can catch it before it has drawn up.
 - **Busting doesn't end your turn.** Over 21 you can keep playing cards (like Drink Me) to get back under. But reaching **30** is a **super bust**: the round ends on the spot and you take double damage.
 - The enemy plays on its own clock. Its **intent bar** starts empty every round and fills toward one surprise attack (7.5 s in for soldiers, 6.5 s for the Queen). In the last 2 seconds before one lands, the enemy flashes red with a **!** and a warning beep plays. You never see the attack's name, only what it did to you.
 - **After each win, the Shop.** Your whole deck is on show. Buy as many of the 3 offered cards as you can afford (10 / 15 / 25 gold by rarity), and click a deck card twice to remove it for 5 gold, down to a 6-card minimum. Each soldier you beat pays 20 gold.
