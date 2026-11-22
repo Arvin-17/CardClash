@@ -6,8 +6,10 @@ extends RefCounted
 ## 1. Already stayed or bust: do nothing.
 ## 2. Total < stay_at: hit.
 ## 3. Total >= stay_at: hit anyway with probability `risk` (only when total <= 18), else stay.
-## Extra (rules.ai.reads_player_total): if Alice has stayed and the enemy can see her total,
-## it stays when she busted and keeps hitting while it's behind. Caterpillar Smoke hides it.
+## Extra (rules.ai.reads_player_total): Alice's total is in plain sight, and standing ends the
+## round on the spot, so while she's ahead (and not bust) the enemy keeps hitting to beat her.
+## Caterpillar Smoke hides her total, so it plays blind on its stay-at number. Her being bust
+## doesn't make it stop early: a bust can be undone with a card.
 
 const HIT := "hit"
 const STAY := "stay"
@@ -21,11 +23,9 @@ static func decide(battle: BattleState) -> String:
 		return NONE
 	var total := enemy.total(target)
 	var ai: Dictionary = battle.rules.get("ai", {})
-	if bool(ai.get("reads_player_total", true)) and not battle.hide_total and battle.player.stayed:
+	if bool(ai.get("reads_player_total", true)) and not battle.hide_total:
 		var player_total := battle.player.total(target)
-		if player_total > target:
-			return STAY
-		if total < player_total:
+		if player_total <= target and total < player_total:
 			return HIT
 	if total < battle.enemy_stay_at:
 		return HIT
@@ -42,7 +42,8 @@ static func preview(battle: BattleState) -> String:
 	var total := enemy.total(battle.target)
 	if total > battle.target:
 		return "BUST"
-	if battle.player.stayed and not battle.hide_total and total < battle.player.total(battle.target) and battle.player.total(battle.target) <= battle.target:
+	if bool(battle.rules.get("ai", {}).get("reads_player_total", true)) and not battle.hide_total \
+			and total < battle.player.total(battle.target) and battle.player.total(battle.target) <= battle.target:
 		return "HIT (behind your total)"
 	if total < battle.enemy_stay_at:
 		return "HIT (below %d)" % battle.enemy_stay_at
