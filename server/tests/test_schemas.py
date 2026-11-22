@@ -15,7 +15,7 @@ def run(**over):
         "battles_won": 8,
         "time_ms": 512000,
         "stats": {"rounds": 31, "busts": 7, "blackjacks": 3, "cards_played": {"drink_me": 4}},
-        "game_version": "0.1.0",
+        "game_version": "0.2.0",
     }
     data.update(over)
     return data

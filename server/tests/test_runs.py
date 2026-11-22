@@ -45,10 +45,11 @@ def test_invalid_payload_is_422(client):
 
 
 def test_outdated_game_version_is_rejected(client):
-    r = client.post("/run", json=make_run(game_version="0.0.9"))
+    # 0.1.0 is the one-act build: its 5-battle runs no longer fit the 8-battle schema.
+    r = client.post("/run", json=make_run(game_version="0.1.0"))
     assert r.status_code == 422
     assert "outdated" in r.json()["detail"]
-    assert client.post("/run", json=make_run(game_version="0.2.0")).status_code == 201
+    assert client.post("/run", json=make_run(game_version="0.2.1")).status_code == 201
 
 
 def test_unknown_card_ids_are_rejected(client):

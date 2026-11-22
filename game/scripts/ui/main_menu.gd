@@ -1,5 +1,6 @@
 extends Control
-## Title screen: new run, continue a saved run, set your leaderboard name, see if the server is up.
+## Title screen: new run, daily run, how to play, continue a saved run, set your leaderboard
+## name, see if the server is up. First launch opens How to Play before anything else.
 
 var _status: Label
 var _name: LineEdit
@@ -21,12 +22,12 @@ func _ready() -> void:
 		_center(Palette.label("CARDCLASH", Palette.RED, true), 50)
 		_center(Palette.label("A BLACKJACK WONDERLAND", Palette.CREAM), 74)
 		_center(Palette.label("GET CLOSER TO 21 THAN THE QUEEN'S SOLDIERS", Palette.GREEN), 86)
-	_button("NEW RUN [ENTER]", y, _new_run)
+	_button("NEW RUN [ENTER]", Vector2(104, y), _new_run)
+	_button("HOW TO PLAY [T]", Vector2(248, y), _how_to_play)
 	y += 22
-	_button("DAILY RUN [D]", y, _daily_run)
+	_button("DAILY RUN [D]", Vector2(104, y), _daily_run)
 	if RunState.has_save():
-		y += 22
-		_button("CONTINUE [C]", y, _continue)
+		_button("CONTINUE [C]", Vector2(248, y), _continue)
 
 	var name_label := Palette.label("NAME", Palette.CREAM)
 	name_label.position = Vector2(180, y + 26)
@@ -49,6 +50,8 @@ func _ready() -> void:
 
 	if Autoplay.enabled():
 		Autoplay.after(self, 0.2, _new_run)
+	elif not RunState.seen_how_to_play:
+		_how_to_play.call_deferred()  # first launch: the rules before anything else
 	Api.health(_on_health)
 
 
@@ -65,10 +68,10 @@ func _center(l: Label, y: int) -> void:
 	add_child(l)
 
 
-func _button(text: String, y: int, action: Callable) -> void:
+func _button(text: String, pos: Vector2, action: Callable) -> void:
 	var b := Button.new()
 	b.text = text
-	b.position = Vector2(176, y)
+	b.position = pos
 	b.size = Vector2(128, 18)
 	b.focus_mode = Control.FOCUS_NONE
 	b.add_theme_stylebox_override("normal", Palette.box(Color(Palette.INK, 0.9), Palette.CREAM))
@@ -87,6 +90,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		_continue()
 	elif key.keycode == KEY_D:
 		_daily_run()
+	elif key.keycode == KEY_T:
+		_how_to_play()
+
+
+func _how_to_play() -> void:
+	if is_inside_tree():
+		Transition.go(RunState.HOWTO_SCENE)
 
 
 func _new_run() -> void:
