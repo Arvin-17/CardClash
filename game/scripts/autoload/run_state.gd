@@ -26,6 +26,8 @@ var battles: Array[String] = []
 var battle_index: int = 0
 ## Wins across the whole run (all acts), for the ending and the leaderboard.
 var battles_won: int = 0
+## Demo mode: straight to the final boss. Never saved over a real run, never submitted.
+var is_demo: bool = false
 var is_daily: bool = false
 var daily_date: String = ""
 var stats: Dictionary = {}
@@ -65,6 +67,7 @@ func new_run(seed_value: int, daily: bool = false, date: String = "") -> void:
 	act_id = act_ids()[0]
 	battle_index = 0
 	battles_won = 0
+	is_demo = false
 	stats = _empty_stats()
 	outcome = {}
 	last_trinket = ""
@@ -72,6 +75,24 @@ func new_run(seed_value: int, daily: bool = false, date: String = "") -> void:
 	_segment_start = Time.get_ticks_msec()
 	battles = act_order(act_id, Rng.rng)
 	active = true
+
+
+## Demo mode: the final act, one fight (rules.json demo.enemy, the Queen), and the starter
+## deck plus demo.extra_cards so there's something to show off.
+func new_demo(seed_value: int) -> void:
+	new_run(seed_value)
+	is_demo = true
+	act_index = act_ids().size() - 1
+	act_id = act_ids()[act_index]
+	battles.assign([str(GameData.rule("demo.enemy", "queen_of_hearts"))])
+	battle_index = 0
+	for id: Variant in GameData.rule("demo.extra_cards", []):
+		deck.append(str(id))
+
+
+## Fights in this run: all eight, or the demo's one.
+func battles_in_run() -> int:
+	return battles.size() if is_demo else total_battles()
 
 
 ## The acts in play order (acts.json order): Tea Party, Tulgey Wood, Queen's Court.
@@ -246,7 +267,8 @@ func _int_stats() -> Dictionary:
 
 func end_run() -> void:
 	active = false
-	clear_save()
+	if not is_demo:
+		clear_save()  # a demo leaves any saved real run alone
 
 
 # --- stats from battle signals ---------------------------------------------------
@@ -275,6 +297,8 @@ func _on_card_played(card: Card) -> void:
 # --- save / continue -------------------------------------------------------------
 
 func save() -> void:
+	if is_demo:
+		return  # never overwrite a real run's save
 	var data := {
 		"run_seed": run_seed,
 		"rng_state": str(Rng.rng.state),  # 64-bit: a JSON float would lose precision
@@ -330,6 +354,7 @@ func load_saved() -> bool:
 	outcome = data.get("outcome", {})
 	_elapsed_ms = int(data.get("elapsed_ms", 0))
 	_segment_start = Time.get_ticks_msec()
+	is_demo = false
 	active = true
 	# Saved right after an act's boss: carry on into the next act.
 	if outcome.is_empty() and act_complete() and not is_final_act():
