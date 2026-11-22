@@ -40,6 +40,10 @@
     "rarity_weights": { "common": 60, "uncommon": 30, "rare": 10 },
     "trinket_after_battle": 2
   },
+  "demo": {
+    "enemy": "queen_of_hearts",
+    "extra_cards": ["num_4", "hedgehog_shield", "vorpal_blade"]
+  },
   "shop": {
     "prices": { "common": 10, "uncommon": 15, "rare": 25 },
     "remove_price": 5,
