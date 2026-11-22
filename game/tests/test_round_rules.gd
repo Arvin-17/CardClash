@@ -48,16 +48,18 @@ func test_super_bust_lands_through_resolve_round() -> void:
 	assert_eq(b.player.hp, 30 - ((30 - 21) + 4) * 2)
 
 
-func test_stand_lets_the_enemy_finish_its_turn_instantly() -> void:
+func test_standing_freezes_the_enemy_and_compares_totals_now() -> void:
 	var b := TestHelpers.battle("club_soldier", [], [], 9)
 	b.start_round()
 	TestHelpers.set_table(b.enemy, ["5", "4"])
 	TestHelpers.set_table(b.player, ["10", "8"])
-	b.player_stay()
-	b.finish_enemy_turn()
-	assert_true(b.enemy.stayed)
+	b.player_stand()
 	assert_true(b.round_over())
-	assert_true(b.enemy.total() >= 18 or b.enemy.is_bust(), "it hits until it beats 18 or busts")
+	assert_null(b.enemy_hit(), "the enemy can't add a card after you stand")
+	assert_eq(b.enemy.total(), 9, "its cards are frozen")
+	var r := b.resolve_round()
+	assert_eq(r["winner"], "player", "18 beats the 9 it was caught on")
+	assert_eq(r["damage"], (18 - 9) + 3)
 
 
 func test_heal_action_restores_3_and_uses_a_card_play() -> void:
