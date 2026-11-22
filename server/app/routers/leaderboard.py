@@ -10,7 +10,7 @@ from sqlmodel import Session, col, select
 from ..db import SessionDep, TodayDep
 from ..models import Run
 from ..ranking import board_scope
-from ..schemas import LeaderboardEntry
+from ..schemas import BATTLES_PER_RUN, LeaderboardEntry
 
 router = APIRouter(tags=["leaderboard"])
 
@@ -61,7 +61,7 @@ def _fmt_time(ms: int) -> str:
 def _table(title: str, entries: list[LeaderboardEntry]) -> str:
     rows = "".join(
         f"<tr><td>{e.rank}</td><td>{html.escape(e.player_name)}</td>"
-        f"<td>{'beat the Queen' if e.won else f'{e.battles_won}/5'}</td><td>{_fmt_time(e.time_ms)}</td></tr>"
+        f"<td>{'beat the Queen' if e.won else f'{e.battles_won}/{BATTLES_PER_RUN}'}</td><td>{_fmt_time(e.time_ms)}</td></tr>"
         for e in entries
     ) or '<tr><td colspan="4">No runs yet. Be the first!</td></tr>'
     return f"<section><h2>{title}</h2><table><tr><th>#</th><th>Name</th><th>Result</th><th>Time</th></tr>{rows}</table></section>"

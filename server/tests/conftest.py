@@ -52,7 +52,7 @@ def make_run(**over) -> dict:
         "is_daily": False,
         "won": True,
         "act": "act3_court",
-        "battles_won": 5,
+        "battles_won": 8,
         "time_ms": 512000,
         "stats": {"rounds": 31, "busts": 7, "blackjacks": 3, "cards_played": {"drink_me": 4}},
         "game_version": "0.1.0",

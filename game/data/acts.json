@@ -1,10 +1,22 @@
 {
   "acts": [
     {
+      "id": "act1_tea",
+      "name": "The Tea Party",
+      "battles": ["spade_soldier", "club_soldier", "mad_hatter"],
+      "shuffle_soldiers": true
+    },
+    {
+      "id": "act2_wood",
+      "name": "The Tulgey Wood",
+      "battles": ["diamond_soldier", "heart_soldier", "cheshire_cat"],
+      "shuffle_soldiers": true
+    },
+    {
       "id": "act3_court",
       "name": "The Queen's Court",
-      "battles": ["spade_soldier", "club_soldier", "diamond_soldier", "heart_soldier", "queen_of_hearts"],
-      "shuffle_soldiers": true
+      "battles": ["knave_of_hearts", "queen_of_hearts"],
+      "shuffle_soldiers": false
     }
   ]
 }

@@ -53,7 +53,7 @@ func test_balance_report() -> void:
 	var lines: Array[String] = ["", "=== BALANCE REPORT (autoplay bot, %d fights per enemy) ===" % 200]
 	var all_rounds := 0
 	var all_busts := 0
-	for enemy_id: String in ["spade_soldier", "club_soldier", "diamond_soldier", "heart_soldier", "queen_of_hearts"]:
+	for enemy_id: String in ["spade_soldier", "club_soldier", "diamond_soldier", "heart_soldier", "mad_hatter", "cheshire_cat", "knave_of_hearts", "queen_of_hearts"]:
 		var rounds := 0
 		var wins := 0
 		var busts := 0
@@ -70,7 +70,10 @@ func test_balance_report() -> void:
 	for s in 200:
 		var hp := 30
 		var won := true
-		for enemy_id: String in RunState.act_order("act3_court", TestHelpers.rng(s)):
+		var order: Array[String] = []
+		for act_id: String in RunState.act_ids():
+			order.append_array(RunState.act_order(act_id, TestHelpers.rng(s)))
+		for enemy_id: String in order:
 			var r := _fight(enemy_id, 5000 + s * 7, hp)
 			if not r["won"]:
 				won = false

@@ -91,7 +91,7 @@ func hit() -> void:
 	if not can_hit():
 		return
 	battle.player_hit()
-	if battle.player.is_bust(battle.target) and not battle.player_super_bust():
+	if battle.player.is_bust(battle.target) and not battle.player_super_bust() and not battle.total_hidden_from_player:
 		Events.message.emit("BUST AT %d! A CARD CAN STILL SAVE YOU." % battle.player.total(battle.target))
 	_check_round_end()
 
@@ -141,9 +141,10 @@ func can_act() -> bool:
 	return round_live() and not battle.player.stayed
 
 
-## Hit: like Stand, but not while you're over 21.
+## Hit: like Stand, but not while you're over 21 (unless the Cheshire Cat hid your total,
+## in which case greying HIT out would give the bust away).
 func can_hit() -> bool:
-	return can_act() and not battle.player.is_bust(battle.target)
+	return can_act() and (battle.total_hidden_from_player or not battle.player.is_bust(battle.target))
 
 
 ## Every phase change goes out on Events, so the UI never sits on a stale screen
