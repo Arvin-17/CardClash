@@ -4,6 +4,16 @@ CardClash is a pixel-art card battler built for a Wonderland-themed hackathon. Y
 
 Win the run and the Queen of Hearts loses her head; lose, and Alice does.
 
+## A run: three acts, eight fights
+
+| Act | Fights |
+| --- | --- |
+| 1. The Tea Party | The Spade and Club soldiers (in a random order), then the **Mad Hatter**, whose attack swaps your table cards with his |
+| 2. The Tulgey Wood | The Diamond and Heart soldiers, then the **Cheshire Cat**, whose attack hides your total (`??`) for the rest of the round |
+| 3. The Queen's Court | The **Knave of Hearts**, who steals a card from your hand, then the **Queen of Hearts** |
+
+After every win you visit the shop. After an act's boss you fall down the rabbit hole into the next act. Beat the Queen to win the run.
+
 ## How a round works
 
 - Each round, you and the enemy get 2 cards from the shared **blind deck** (a standard 52). Your hand draws up to 3 cards from your own **built deck**.
