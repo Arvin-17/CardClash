@@ -22,15 +22,8 @@ GameData="*res://scripts/autoload/game_data.gd"
 Rng="*res://scripts/autoload/rng.gd"
 Events="*res://scripts/autoload/events.gd"
 RunState="*res://scripts/autoload/run_state.gd"
-Api="*res://scripts/autoload/api.gd"
 Audio="*res://scripts/autoload/audio.gd"
 Transition="*res://scripts/autoload/transition.gd"
-
-[cardclash]
-
-api/base_url="http://127.0.0.1:8000"
-api/base_url.web="https://cardclash-api.onrender.com"
-api/timeout_seconds=6.0
 
 [display]
 

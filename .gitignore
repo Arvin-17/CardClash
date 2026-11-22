@@ -7,14 +7,10 @@
 /game/export/
 *.translation
 
-# Python
+# Python (tools/export_art.py)
 __pycache__/
 *.py[cod]
 .venv/
-venv/
-.pytest_cache/
-*.db
-*.sqlite3
 
 # Secrets
 .env

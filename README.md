@@ -11,13 +11,12 @@ Win the run and the Queen of Hearts loses her head; lose, and Alice does.
 1. Install [Godot 4.7](https://godotengine.org/download) (the standard build, not .NET).
 2. Open `game/project.godot` in Godot and press **F5**, or from a terminal run `godot --path game`.
 3. The first time you start, the **How to Play** screen walks you through the rules with screenshots and live demos. It's on the menu any time: **HOW TO PLAY [T]**.
-4. Type your name on the menu (it goes on the leaderboard), then pick:
+4. On the menu, pick:
    - **NEW RUN** (Enter): a fresh shuffle.
-   - **DAILY RUN** (D): the same shuffle for everyone today, with its own leaderboard. This needs the server.
-   - **QUEEN DEMO** (Q): skip straight to the final boss, the Queen of Hearts, with the starter deck plus a few showcase cards. Demos aren't saved or put on the leaderboard.
+   - **QUEEN DEMO** (Q): skip straight to the final boss, the Queen of Hearts, with the starter deck plus a few showcase cards. A demo doesn't touch your saved run.
    - **CONTINUE** (C): pick up a run you left (saved after every fight).
 
-The leaderboard and the daily run need the API (see [Run the API locally](#run-the-api-locally)). Without it the menu says OFFLINE and everything else still works.
+CardClash is single player and fully offline: no account, no server, no internet needed.
 
 ### Controls
 
@@ -212,57 +211,27 @@ The same drawing engine made these GIFs and the game's art. `tools/sprites` rend
 
 ```
 /game     Godot 4 project (GDScript)
-  /data   cards, enemies, acts, rules, trinkets JSON: the shared contract
-/server   FastAPI backend (leaderboards, daily runs, run stats, card data)
+  /data   cards, enemies, acts, rules, trinkets JSON: every tunable number
+/tools    art export (tools/sprites), placeholder art and sounds, How to Play screenshots
+/docs     design GIFs used in this README
 ```
 
 ## Shared data
 
-`game/data/*.json` is the single source of truth. Design edits names, text and art paths. Game logic edits numbers and effects. The backend serves the same files. Review JSON changes in pull requests so nobody silently changes balance.
+`game/data/*.json` is the single source of truth. Design edits names, text and art paths. Game logic edits numbers and effects. Review JSON changes in pull requests so nobody silently changes balance.
 
 | File | What's in it |
 | --- | --- |
 | `cards.json` | Every card: `id, name, type, value, rarity, pool, effect, params, art, anim, text` |
-| `enemies.json` | The four suit soldiers and the Queen: HP, attack, AI numbers, surprise attack |
-| `acts.json` | Act 3, The Queen's Court: 4 shuffled soldiers, then the Queen |
+| `enemies.json` | The four suit soldiers, the Mad Hatter, the Cheshire Cat, the Knave and the Queen: HP, attack, AI numbers, surprise attack, gold |
+| `acts.json` | The three acts in order and their fights |
 | `rules.json` | Every tunable number: HP, timer, plays per round (0 = no limit), Heal, attack warning time, damage table, gold, shop prices |
-| `trinkets.json` | Passive items (stretch goal) |
-
-## Run the API locally
-
-```bash
-cd server
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements-dev.txt
-uvicorn app.main:app --reload      # http://localhost:8000/docs
-python -m pytest                   # tests
-```
-
-Settings come from environment variables; see `server/.env.example`.
-
-### API
-
-| Method + path | Purpose |
-| --- | --- |
-| `GET /health` | Is the server up (the game shows online/offline) |
-| `GET /daily-seed` | Today's shared seed `{date, seed}` |
-| `GET /cards` | `cards.json` with an ETag (the game falls back to its bundled copy) |
-| `POST /run` | Submit a finished run → `201 {id, rank}`; invalid → `422` |
-| `GET /leaderboard?daily=&limit=` | Top runs: winners, then battles won, then time |
-| `GET /stats` | Win rate, bust rate, blackjack rate, Queen kills, top cards |
-
-Stretch extras: `DELETE /run/{id}` with an `X-Admin-Key` header, and `GET /board`, an auto-refreshing leaderboard page for a second screen.
-
-**Anti-cheat basics.** Any run sent from a browser can be faked, so the server stops junk and casual cheating:
-- It checks every range (battles 0–8, at least 30 s, busts ≤ rounds, `won` only with all 8 battles).
-- It cleans names and rate-limits `POST /run`.
-- It rejects old game versions, and daily runs that don't use today's seed.
+| `trinkets.json` | Passive items: you get one after your second win |
 
 ## Develop: tests, debug keys and the autoplay bot
 
 - Any scene runs on its own with **F6** in the editor.
 - Debug builds have extra keys: **F1** overlay, **F2** instant win, **F3** print the seed.
-- The game talks to the API at `http://127.0.0.1:8000` by default. To point it elsewhere, run `godot --path game -- --api=https://...`, or edit `cardclash/api/base_url` in Project Settings.
 - The How to Play screenshots come from `tools/howto/capture.gd`. Re-run it (instructions at the top of the file) when the battle screen's look changes.
 
 Unit tests use [GUT](https://github.com/bitwes/Gut). Install **GUT 9.7.1** from the Asset Library (it lands in `game/addons/gut`, which git ignores), then:
@@ -286,32 +255,23 @@ Placeholder art, fonts and sounds come from `python3 tools/export_art.py`. The d
   - `BattleController` drives them in real time (Timer nodes for the round, the AI tick and the intent bar) and re-emits every change on the `Events` bus.
   - The UI and `Audio` only listen.
 - **All numbers live in `game/data`.** Balancing is editing JSON.
-- **One seeded RNG** (`Rng`). Same seed, same run: needed for the daily run and bug reports.
+- **One seeded RNG** (`Rng`). Same seed, same run: needed for bug reports and balance testing.
 - **Cards are data plus one small script.** `effect` names map to `scripts/effects/<name>.gd`, and enemy surprise attacks to `scripts/effects/enemy/<name>.gd`.
-- **`Api`** is the only thing that touches the network. It fails silently, and scenes pass callbacks so leaving a screen mid-request is safe.
 - **Art is exported, not hand-placed.** `tools/sprites` renders every sprite sheet into `game/art/anim/` with a `manifest.json`; `AnimLib` turns them into `SpriteFrames`. `battle_ui.gd` and `BattleFx` play the animations and effects in response to `Events`, and fall back to plain shapes if a sheet is missing. To change the art: edit `tools/sprites/engine.js`, run `npm run export` there, then `godot --headless --import` (see `tools/sprites/README.md`).
 - **`Transition`** (autoload) does the card wipe between screens and the rabbit-hole fall at the start of a run; headless and autoplay runs switch scenes instantly.
 
-## Deploy
-
-**API → Render** (`render.yaml`):
-1. In Render, choose **New → Blueprint** and pick this repo. You get the `cardclash-api` web service and a free Postgres database. On a free host SQLite can reset on redeploy, so Postgres is used here; locally it stays SQLite.
-2. Set `ALLOWED_ORIGINS` to the game's origin. itch.io serves web games from `https://html-classic.itch.zone`.
-3. Open `https://<service>.onrender.com/docs` to check it.
+## Share a build
 
 **Web build → itch.io:**
 1. In Godot: **Project → Export → Web → Export Project** (this needs the 4.7.2 export templates).
    - The preset ships the data JSON and leaves out tests and GUT.
    - Threads are off, so itch.io needs no SharedArrayBuffer headers.
-   - The web build calls `cardclash/api/base_url.web`. Change it if your Render URL differs.
 2. Zip `game/build/web/` and upload it to itch.io as an HTML game.
 
-**Desktop backup:** the **Windows Desktop** and **Linux** presets build a single-file game. Keep one on a USB stick.
+**Desktop:** the **Windows Desktop** and **Linux** presets build a single-file game. Keep one on a USB stick.
 
 ### Demo-day checklist
 
-- [ ] Open `/health` a few minutes before judging. Free servers sleep and take 30+ s to wake.
-- [ ] Have a local backup server ready: `cd server && uvicorn app.main:app`, and run the game with `-- --api=http://127.0.0.1:8000`.
-- [ ] Remember the game is fully playable offline: a dead Wi-Fi only costs the leaderboard.
-- [ ] Put `GET /board` on a second screen as a live leaderboard.
-- [ ] Use `DELETE /run/{id}` with `X-Admin-Key` to remove junk entries (the key is in Render's env vars).
+- [ ] Test the exported build on the demo laptop.
+- [ ] Use **QUEEN DEMO [Q]** to show the final boss and an ending in a couple of minutes.
+- [ ] The game is fully offline, so a dead Wi-Fi costs nothing.
