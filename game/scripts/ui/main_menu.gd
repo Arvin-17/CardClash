@@ -1,5 +1,5 @@
 extends Control
-## Title screen: new run, daily run, how to play, continue a saved run, set your leaderboard
+## Title screen: new run, daily run, how to play, the Queen demo, continue a saved run, set your leaderboard
 ## name, see if the server is up. First launch opens How to Play before anything else.
 
 var _status: Label
@@ -26,8 +26,10 @@ func _ready() -> void:
 	_button("HOW TO PLAY [T]", Vector2(248, y), _how_to_play)
 	y += 22
 	_button("DAILY RUN [D]", Vector2(104, y), _daily_run)
+	_button("QUEEN DEMO [Q]", Vector2(248, y), _demo)
 	if RunState.has_save():
-		_button("CONTINUE [C]", Vector2(248, y), _continue)
+		y += 22
+		_button("CONTINUE [C]", Vector2(176, y), _continue)
 
 	var name_label := Palette.label("NAME", Palette.CREAM)
 	name_label.position = Vector2(180, y + 26)
@@ -49,7 +51,7 @@ func _ready() -> void:
 	add_child(_status)
 
 	if Autoplay.enabled():
-		Autoplay.after(self, 0.2, _new_run)
+		Autoplay.after(self, 0.2, _demo if Autoplay.demo() else _new_run)
 	elif not RunState.seen_how_to_play:
 		_how_to_play.call_deferred()  # first launch: the rules before anything else
 	Api.health(_on_health)
@@ -92,11 +94,21 @@ func _unhandled_input(event: InputEvent) -> void:
 		_daily_run()
 	elif key.keycode == KEY_T:
 		_how_to_play()
+	elif key.keycode == KEY_Q:
+		_demo()
 
 
 func _how_to_play() -> void:
 	if is_inside_tree():
 		Transition.go(RunState.HOWTO_SCENE)
+
+
+## Demo mode: down the rabbit hole straight to the Queen. Doesn't touch a saved run or the leaderboard.
+func _demo() -> void:
+	if not is_inside_tree():
+		return
+	RunState.new_demo(Rng.new_seed())
+	Transition.rabbit_hole(RunState.BATTLE_SCENE, str(GameData.act(RunState.act_id).get("name", "")))
 
 
 func _new_run() -> void:

@@ -8,6 +8,11 @@ static func enabled() -> bool:
 	return OS.get_cmdline_user_args().has("--autoplay")
 
 
+## `-- --autoplay --demo`: the bot plays demo mode (straight to the Queen) instead of a run.
+static func demo() -> bool:
+	return OS.get_cmdline_user_args().has("--demo")
+
+
 ## Returns "play:<index>", "hit", "stay" or "" (wait).
 static func decide(battle: BattleState) -> String:
 	if battle.player.stayed:
