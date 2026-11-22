@@ -720,11 +720,31 @@ func _on_surprise(_enemy_id: String, kind: String) -> void:
 		_enemy_rest()
 	var what := _message.text
 	_message.text = "THE ENEMY STRIKES!" + (" " + what if not what.is_empty() else "")
-	var word: String = {"bonk": "+2!", "dig": "BURIED!", "pilfer": "STOLEN!", "off_with_it": "OFF WITH IT!", "off_with_its_head": "OFF WITH ITS HEAD!"}.get(kind, "")
+	var params: Dictionary = controller.battle.enemy_def.get("surprise_params", {}) if controller.battle else {}
+	var word := attack_word(kind, params)
 	if not word.is_empty():
 		_fx.pop(word, Vector2(240 - word.length() * 3, 186), Palette.GOLD_HI, true)
 	_flash("")
 	_shake()
+
+
+## The word that pops when an attack lands: what it did, with the enemy's real amount,
+## never the attack's name.
+static func attack_word(kind: String, params: Dictionary) -> String:
+	match kind:
+		"bonk":
+			return "%+d!" % int(params.get("amount", 2))
+		"dig":
+			return "BURIED!"
+		"pilfer":
+			return "STOLEN!"
+		"off_with_it", "off_with_its_head":
+			return "CARD LOST!"
+		"move_down":
+			return "SWAPPED!"
+		"grin":
+			return "??"
+	return ""
 
 
 func _on_blocked(_enemy_id: String, _kind: String) -> void:
