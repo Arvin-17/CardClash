@@ -1,7 +1,7 @@
 extends Node
 ## The current run: everything that survives between battles. Saved to user://run.json
-## after every battle so a crash doesn't wipe the demo. `stats` feeds the backend's stats
-## screen and is incremented from battle signals.
+## after every battle so a crash doesn't wipe the run. `stats` (rounds, busts, blackjacks)
+## feeds the ending screen and is incremented from battle signals.
 
 const SAVE_PATH := "user://run.json"
 const SETTINGS_PATH := "user://settings.cfg"
@@ -24,19 +24,16 @@ var act_index: int = 0
 ## This act's battle order: shuffled soldiers, boss last.
 var battles: Array[String] = []
 var battle_index: int = 0
-## Wins across the whole run (all acts), for the ending and the leaderboard.
+## Wins across the whole run (all acts), for the map and the ending.
 var battles_won: int = 0
 ## Demo mode: straight to the final boss. Never saved over a real run, never submitted.
 var is_demo: bool = false
-var is_daily: bool = false
-var daily_date: String = ""
 var stats: Dictionary = {}
 var active: bool = false
 ## How the run ended, for the ending screen: {"won": bool, "enemy": id}.
 var outcome: Dictionary = {}
 ## A trinket found after the last win (shown on the reward screen), or "".
 var last_trinket: String = ""
-var player_name: String = "ALICE"
 ## Has this player seen How to Play? It opens by itself on first launch until they have.
 var seen_how_to_play: bool = false
 
@@ -48,14 +45,11 @@ func _ready() -> void:
 	_load_settings()
 	stats = _empty_stats()
 	Events.round_resolved.connect(_on_round_resolved)
-	Events.card_played.connect(_on_card_played)
 
 
-func new_run(seed_value: int, daily: bool = false, date: String = "") -> void:
+func new_run(seed_value: int) -> void:
 	run_seed = seed_value
 	Rng.set_seed(seed_value)
-	is_daily = daily
-	daily_date = date
 	max_hp = int(GameData.rule("player.max_hp", 30))
 	hp = max_hp
 	gold = 0
@@ -236,35 +230,6 @@ func time_ms() -> int:
 	return _elapsed_ms + (Time.get_ticks_msec() - _segment_start)
 
 
-## The POST /run payload (the backend contract: never rename a field without telling backend).
-func run_payload() -> Dictionary:
-	return {
-		"player_name": player_name,
-		"seed": run_seed,
-		"is_daily": is_daily,
-		"won": bool(outcome.get("won", false)),
-		"act": act_id,
-		"battles_won": battles_won,
-		"time_ms": time_ms(),
-		"stats": _int_stats(),
-		"game_version": GameData.game_version(),
-	}
-
-
-## JSON round-trips turn ints into floats; the backend wants ints.
-func _int_stats() -> Dictionary:
-	var played := {}
-	var source: Dictionary = stats.get("cards_played", {})
-	for id: Variant in source:
-		played[str(id)] = int(source[id])
-	return {
-		"rounds": int(stats.get("rounds", 0)),
-		"busts": int(stats.get("busts", 0)),
-		"blackjacks": int(stats.get("blackjacks", 0)),
-		"cards_played": played,
-	}
-
-
 func end_run() -> void:
 	active = false
 	if not is_demo:
@@ -274,7 +239,7 @@ func end_run() -> void:
 # --- stats from battle signals ---------------------------------------------------
 
 func _empty_stats() -> Dictionary:
-	return {"rounds": 0, "busts": 0, "blackjacks": 0, "cards_played": {}}
+	return {"rounds": 0, "busts": 0, "blackjacks": 0}
 
 
 func _on_round_resolved(result: Dictionary) -> void:
@@ -285,13 +250,6 @@ func _on_round_resolved(result: Dictionary) -> void:
 		stats["busts"] = int(stats["busts"]) + 1
 	if bool(result.get("blackjack", false)):
 		stats["blackjacks"] = int(stats["blackjacks"]) + 1
-
-
-func _on_card_played(card: Card) -> void:
-	if not active or card.def.is_empty():
-		return
-	var played: Dictionary = stats["cards_played"]
-	played[card.id] = int(played.get(card.id, 0)) + 1
 
 
 # --- save / continue -------------------------------------------------------------
@@ -312,8 +270,6 @@ func save() -> void:
 		"battles": battles,
 		"battle_index": battle_index,
 		"battles_won": battles_won,
-		"is_daily": is_daily,
-		"daily_date": daily_date,
 		"stats": stats,
 		"outcome": outcome,
 		"elapsed_ms": time_ms(),
@@ -348,8 +304,6 @@ func load_saved() -> bool:
 	battles.assign((data["battles"] as Array).map(func(x: Variant) -> String: return str(x)))
 	battle_index = int(data["battle_index"])
 	battles_won = int(data.get("battles_won", battle_index))
-	is_daily = bool(data.get("is_daily", false))
-	daily_date = str(data.get("daily_date", ""))
 	stats = data.get("stats", _empty_stats())
 	outcome = data.get("outcome", {})
 	_elapsed_ms = int(data.get("elapsed_ms", 0))
@@ -369,12 +323,6 @@ func clear_save() -> void:
 
 # --- settings ----------------------------------------------------------------------
 
-func set_player_name(value: String) -> void:
-	var cleaned := value.strip_edges().left(16)
-	player_name = cleaned if not cleaned.is_empty() else "ALICE"
-	_save_setting("player", "name", player_name)
-
-
 func mark_how_to_play_seen() -> void:
 	seen_how_to_play = true
 	_save_setting("player", "seen_how_to_play", true)
@@ -391,5 +339,4 @@ func _save_setting(section: String, key: String, value: Variant) -> void:
 func _load_settings() -> void:
 	var cfg := ConfigFile.new()
 	if cfg.load(SETTINGS_PATH) == OK:
-		player_name = str(cfg.get_value("player", "name", "ALICE"))
 		seen_how_to_play = bool(cfg.get_value("player", "seen_how_to_play", false))

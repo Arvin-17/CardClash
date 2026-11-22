@@ -1,9 +1,6 @@
 extends Control
-## Title screen: new run, daily run, how to play, the Queen demo, continue a saved run, set your leaderboard
-## name, see if the server is up. First launch opens How to Play before anything else.
-
-var _status: Label
-var _name: LineEdit
+## Title screen: new run, how to play, the Queen demo, continue a saved run.
+## First launch opens How to Play before anything else. Single player, fully offline.
 
 
 func _ready() -> void:
@@ -25,42 +22,18 @@ func _ready() -> void:
 	_button("NEW RUN [ENTER]", Vector2(104, y), _new_run)
 	_button("HOW TO PLAY [T]", Vector2(248, y), _how_to_play)
 	y += 22
-	_button("DAILY RUN [D]", Vector2(104, y), _daily_run)
-	_button("QUEEN DEMO [Q]", Vector2(248, y), _demo)
 	if RunState.has_save():
-		y += 22
-		_button("CONTINUE [C]", Vector2(176, y), _continue)
-
-	var name_label := Palette.label("NAME", Palette.CREAM)
-	name_label.position = Vector2(180, y + 26)
-	add_child(name_label)
-	_name = LineEdit.new()
-	_name.text = RunState.player_name
-	_name.max_length = 16
-	_name.position = Vector2(204, y + 22)
-	_name.size = Vector2(96, 14)
-	_name.add_theme_stylebox_override("normal", Palette.box(Palette.BLACK, Palette.GREEN))
-	_name.add_theme_stylebox_override("focus", Palette.box(Palette.BLACK, Palette.RED))
-	_name.text_changed.connect(RunState.set_player_name)
-	_name.text_submitted.connect(func(_t: String) -> void: _name.release_focus())
-	add_child(_name)
+		_button("QUEEN DEMO [Q]", Vector2(104, y), _demo)
+		_button("CONTINUE [C]", Vector2(248, y), _continue)
+	else:
+		_button("QUEEN DEMO [Q]", Vector2(176, y), _demo)
 
 	_center(Palette.shadow_label("H HIT   SPACE STAND   E HEAL   1-5 CARDS (2 PER ROUND)", Palette.GOLD_HI), 246)
-	_status = Palette.shadow_label("CHECKING SERVER...", Palette.LAVENDER)
-	_status.position = Vector2(4, 260)
-	add_child(_status)
 
 	if Autoplay.enabled():
 		Autoplay.after(self, 0.2, _demo if Autoplay.demo() else _new_run)
 	elif not RunState.seen_how_to_play:
 		_how_to_play.call_deferred()  # first launch: the rules before anything else
-	Api.health(_on_health)
-
-
-func _on_health(online: bool) -> void:
-	_status.text = "ONLINE" if online else "OFFLINE (THE GAME STILL WORKS; NO LEADERBOARD)"
-	if online:
-		Api.refresh_cards()
 
 
 func _center(l: Label, y: int) -> void:
@@ -84,14 +57,12 @@ func _button(text: String, pos: Vector2, action: Callable) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	var key := event as InputEventKey
-	if key == null or not key.pressed or key.echo or _name.has_focus():
+	if key == null or not key.pressed or key.echo:
 		return
 	if key.keycode == KEY_ENTER or key.keycode == KEY_SPACE:
 		_new_run()
 	elif key.keycode == KEY_C and RunState.has_save():
 		_continue()
-	elif key.keycode == KEY_D:
-		_daily_run()
 	elif key.keycode == KEY_T:
 		_how_to_play()
 	elif key.keycode == KEY_Q:
@@ -103,7 +74,7 @@ func _how_to_play() -> void:
 		Transition.go(RunState.HOWTO_SCENE)
 
 
-## Demo mode: down the rabbit hole straight to the Queen. Doesn't touch a saved run or the leaderboard.
+## Demo mode: down the rabbit hole straight to the Queen. Doesn't touch a saved run.
 func _demo() -> void:
 	if not is_inside_tree():
 		return
@@ -116,21 +87,6 @@ func _new_run() -> void:
 		return
 	RunState.clear_save()
 	RunState.new_run(Rng.new_seed())
-	Transition.rabbit_hole(RunState.MAP_SCENE, str(GameData.act(RunState.act_id).get("name", "")))
-
-
-## Daily Run: everyone gets the same seed today (from GET /daily-seed). Needs the server.
-func _daily_run() -> void:
-	_status.text = "FETCHING TODAY'S SEED..."
-	Api.daily_seed(_on_daily_seed)
-
-
-func _on_daily_seed(daily: Variant) -> void:
-	if not (daily is Dictionary):
-		_status.text = "DAILY RUN NEEDS THE SERVER. TRY A NEW RUN!"
-		return
-	RunState.clear_save()
-	RunState.new_run(int(daily["seed"]), true, str(daily["date"]))
 	Transition.rabbit_hole(RunState.MAP_SCENE, str(GameData.act(RunState.act_id).get("name", "")))
 
 
