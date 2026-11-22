@@ -1,5 +1,5 @@
 extends GutTest
-## RunState: soldier shuffle, gold, healing, stats from signals, and the POST /run payload.
+## RunState: soldier shuffle, acts, gold, healing, stats from signals, saving.
 
 
 func after_each() -> void:
@@ -120,30 +120,19 @@ func test_stats_come_from_battle_signals() -> void:
 	RunState.new_run(1)
 	Events.round_resolved.emit({"player_bust": true, "blackjack": false})
 	Events.round_resolved.emit({"player_bust": false, "blackjack": true})
-	Events.card_played.emit(Card.from_def(GameData.card("drink_me")))
-	Events.card_played.emit(Card.from_def(GameData.card("drink_me")))
 	assert_eq(RunState.stats["rounds"], 2)
 	assert_eq(RunState.stats["busts"], 1)
 	assert_eq(RunState.stats["blackjacks"], 1)
-	assert_eq(RunState.stats["cards_played"]["drink_me"], 2)
 
 
-func test_run_payload_matches_the_backend_contract() -> void:
+func test_a_loss_records_where_the_run_ended() -> void:
 	RunState.new_run(834201933)
-	RunState.player_name = "alice"
 	RunState.record_loss("spade_soldier")
-	var p: Dictionary = RunState.run_payload()
-	var keys := p.keys()
-	keys.sort()
-	assert_eq(keys, ["act", "battles_won", "game_version", "is_daily", "player_name", "seed", "stats", "time_ms", "won"])
-	assert_eq(p["seed"], 834201933)
-	assert_eq(p["act"], "act1_tea")
-	assert_false(p["won"])
-	assert_eq(p["battles_won"], 0)
-	assert_eq(typeof(p["time_ms"]), TYPE_INT)
-	assert_eq((p["stats"] as Dictionary).keys().size(), 4)
-	assert_eq(typeof(p["stats"]["rounds"]), TYPE_INT)
-	assert_eq(p["game_version"], GameData.game_version())
+	assert_false(RunState.outcome["won"])
+	assert_eq(RunState.outcome["enemy"], "spade_soldier")
+	assert_eq(RunState.battles_won, 0)
+	assert_eq(RunState.act_id, "act1_tea")
+	assert_eq(RunState.scene_after_battle(), RunState.ENDING_SCENE)
 
 
 ## Win every fight, act by act, the way the shop moves the run along.
@@ -159,10 +148,9 @@ func _win_whole_run() -> void:
 func test_won_only_when_all_eight_battles_are_won() -> void:
 	RunState.new_run(1)
 	_win_whole_run()
-	var p: Dictionary = RunState.run_payload()
-	assert_true(p["won"])
-	assert_eq(p["battles_won"], 8)
-	assert_eq(p["act"], "act3_court")
+	assert_true(RunState.outcome["won"])
+	assert_eq(RunState.battles_won, 8)
+	assert_eq(RunState.act_id, "act3_court")
 
 
 func test_save_and_continue() -> void:

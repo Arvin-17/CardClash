@@ -28,7 +28,7 @@ func load_all() -> void:
 	trinkets = _index(read_json("trinkets.json").get("trinkets", []))
 
 
-## Replaces the card table (bundled file at startup, or a newer copy from GET /cards).
+## Builds the card table from cards.json.
 func apply_cards(data: Dictionary) -> void:
 	var list: Array = data.get("cards", [])
 	if list.is_empty():
