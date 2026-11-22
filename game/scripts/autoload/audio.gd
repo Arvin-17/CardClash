@@ -5,12 +5,16 @@ extends Node
 const SOUNDS := ["deal", "hit", "play", "bust", "win_round", "lose_round", "critical", "surprise", "blocked", "victory", "defeat", "click", "warning"]
 
 var muted: bool = false
+## No real audio output (headless tests, CI, movie-writer recordings): play nothing, since
+## the dummy driver never mixes finished sounds away and they pile up until exit.
+var _silent: bool = false
 var _streams: Dictionary = {}
 var _players: Array[AudioStreamPlayer] = []
 var _next: int = 0
 
 
 func _ready() -> void:
+	_silent = AudioServer.get_driver_name() == "Dummy"
 	for name: String in SOUNDS:
 		var path := "res://audio/%s.wav" % name
 		if ResourceLoader.exists(path):
@@ -30,8 +34,18 @@ func _ready() -> void:
 	Events.battle_lost.connect(func(_id: String) -> void: play("defeat"))
 
 
+## On quit, stop every player and let go of the sounds, so nothing is still held by the audio
+## server at exit. (Headless and movie-writer runs use a dummy driver that never mixes finished
+## sounds away, which showed up as "AudioStreamWAV leaked" and "resources still in use".)
+func _exit_tree() -> void:
+	for p in _players:
+		p.stop()
+		p.stream = null
+	_streams.clear()
+
+
 func play(name: String) -> void:
-	if muted or not _streams.has(name):
+	if muted or _silent or not _streams.has(name):
 		return
 	var p := _players[_next]
 	_next = (_next + 1) % _players.size()
