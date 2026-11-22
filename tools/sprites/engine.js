@@ -243,7 +243,7 @@ S.title = (o) => ({ raw:(t,W,H)=>{
  text(T,tx,ty,(j)=>['#ffe0ea','#ffb0cc','#ff7fb0','#f0558e','#e0407a','#c02a62','#8a1846'][j],sc);
  const gx=(t*90)%(W+200)-100; for (let k=0;k<3;k++) { const x=Math.round(gx)+k*6; if (x>tx&&x<tx+tw(T,sc)) { R(x,ty+2,2,8,P.white); } }
  const cx=240, cy=38+(Math.floor(t*1.5)%2); R(cx-12,cy,24,5,P.gold); R(cx-11,cy+1,22,1,P.goldHi); poly([[cx-12,cy],[cx-9,cy-9],[cx-6,cy]],P.gold); poly([[cx-3,cy],[cx,cy-12],[cx+3,cy]],P.gold); poly([[cx+6,cy],[cx+9,cy-9],[cx+12,cy]],P.gold); px(cx-9,cy-8,P.redHi); px(cx,cy-11,P.redHi); px(cx+9,cy-8,P.redHi); bmp(PIP5.heart,cx-2,cy,P.red);
- const tg='HIT · STAY · LOSE YOUR HEAD'; stext(tg,Math.round((W-tw(tg,2))/2),108,P.goldHi,2);
+ const tg='HIT · STAND · LOSE YOUR HEAD'; stext(tg,Math.round((W-tw(tg,2))/2),108,P.goldHi,2);
  if (!o.noPress&&(t%1.2)<0.8) { const ps='- PRESS START -'; stext(ps,Math.round((W-tw(ps,2))/2),228,P.cream,2); }
  const cw2=Math.cos(t*1.2), w2=Math.max(2,Math.round(Math.abs(cw2)*30)), x2=46-Math.round(w2/2); R(x2-1,177,w2+2,46,P.ink); R(x2,178,w2,44,P.cream); if (cw2<0) { R(x2+2,180,w2-4,40,P.redDk); for (let yy=184;yy<218;yy+=6) if (w2>10) bmp(PIP5.diamond,x2+w2/2-2,yy,P.gold); } else if (w2>14) { text('A',x2+3,181,P.red,1); heart(x2+w2/2,198,6,P.red); }
  const hb=Math.floor(t*2)%2; R(410,232+hb,44,4,P.greenDk); R(410,232+hb,44,1,P.greenHi); poly([[418,232+hb],[446,232+hb],[450,196+hb],[414,196+hb]],P.green); R(418,198+hb,3,32,P.greenHi); R(416,222+hb,33,5,P.plumHi); R(432,206+hb,17,8,P.cream); mtext('10/6',433,207+hb,P.ink);
