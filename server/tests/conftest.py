@@ -13,7 +13,7 @@ TODAY = dt.date(2026, 11, 21)
 
 @pytest.fixture
 def settings() -> Settings:
-    return Settings(database_url="sqlite://", admin_key="test-admin", game_version="0.1.0")
+    return Settings(database_url="sqlite://", admin_key="test-admin", game_version="0.2.0")
 
 
 @pytest.fixture
@@ -55,7 +55,7 @@ def make_run(**over) -> dict:
         "battles_won": 8,
         "time_ms": 512000,
         "stats": {"rounds": 31, "busts": 7, "blackjacks": 3, "cards_played": {"drink_me": 4}},
-        "game_version": "0.1.0",
+        "game_version": "0.2.0",
     }
     data.update(over)
     return data
