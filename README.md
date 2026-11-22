@@ -8,15 +8,32 @@ Win the run and the Queen of Hearts loses her head; lose, and Alice does.
 
 ### Start the game
 
-1. Install [Godot 4.7](https://godotengine.org/download) (the standard build, not .NET).
-2. Open `game/project.godot` in Godot and press **F5**, or from a terminal run `godot --path game`.
-3. The first time you start, the **How to Play** screen walks you through the rules with screenshots and live demos. It's on the menu any time: **HOW TO PLAY [T]**.
-4. On the menu, pick:
+**1. Install Godot 4.7.** It's free. Get the standard build, not .NET.
+- **macOS:** download it from [godotengine.org/download/macos](https://godotengine.org/download/macos/), unzip it, and drag **Godot.app** into **Applications**. (Or: `brew install --cask godot`.)
+- **Windows:** download it from [godotengine.org/download/windows](https://godotengine.org/download/windows/) and unzip it anywhere.
+- **Linux:** download it from [godotengine.org/download/linux](https://godotengine.org/download/linux/).
+
+**2. Start the game.** Any of these works:
+- **macOS:** double-click **`Play CardClash.command`** in this folder. If macOS won't open it the first time, right-click it and choose **Open**.
+- **macOS or Linux, in a terminal:** run `./play.sh` from this folder.
+- **Any system, from the Godot editor:** open Godot, click **Import**, choose `game/project.godot`, then press **F5** (the ▶ button at the top right).
+
+The first start takes a minute while Godot imports the game's art, fonts and scripts. `play.sh` and the editor both do this for you, and `play.sh` does it again after a `git pull` changes files.
+
+**3.** The first time you start, the **How to Play** screen walks you through the rules with screenshots and live demos. It's on the menu any time: **HOW TO PLAY [T]**.
+
+**4.** On the menu, pick:
    - **NEW RUN** (Enter): a fresh shuffle.
    - **QUEEN DEMO** (Q): skip straight to the final boss, the Queen of Hearts, with the starter deck plus a few showcase cards. A demo doesn't touch your saved run.
    - **CONTINUE** (C): pick up a run you left (saved after every fight).
 
 CardClash is single player and fully offline: no account, no server, no internet needed.
+
+**If it won't start:**
+- *"Godot 4.7 isn't installed"* from `play.sh`: install it as in step 1. If it's somewhere unusual, run `GODOT=/path/to/Godot ./play.sh`.
+- *`godot: command not found`* on macOS: Godot.app doesn't add a `godot` command. Use `./play.sh`, or run `/Applications/Godot.app/Contents/MacOS/Godot --path game`.
+- *A black window, or errors like `Identifier "Palette" not declared`*: the project was never imported, which happens when you run `godot --path game` on a fresh clone. Use `./play.sh` or open the project in the editor once.
+- *"needs Godot 4.7 or newer"*: an older Godot opened it. Install 4.7.
 
 ### Controls
 
