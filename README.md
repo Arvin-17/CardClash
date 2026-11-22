@@ -14,6 +14,7 @@ Win the run and the Queen of Hearts loses her head; lose, and Alice does.
 4. Type your name on the menu (it goes on the leaderboard), then pick:
    - **NEW RUN** (Enter): a fresh shuffle.
    - **DAILY RUN** (D): the same shuffle for everyone today, with its own leaderboard. This needs the server.
+   - **QUEEN DEMO** (Q): skip straight to the final boss, the Queen of Hearts, with the starter deck plus a few showcase cards. Demos aren't saved or put on the leaderboard.
    - **CONTINUE** (C): pick up a run you left (saved after every fight).
 
 The leaderboard and the daily run need the API (see [Run the API locally](#run-the-api-locally)). Without it the menu says OFFLINE and everything else still works.
@@ -30,6 +31,7 @@ The leaderboard and the daily run need the API (see [Run the API locally](#run-t
 | **Enter** | Continue / next |
 | **Esc** | Close a choice, or the How to Play screen |
 | **T** (menu) | How to Play |
+| **Q** (menu) | Queen demo |
 
 ### The rules
 
@@ -270,6 +272,7 @@ cd game
 godot --headless --import
 godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://tests -gexit
 godot --headless --fixed-fps 60 -- --autoplay    # for CI: a bot plays a whole run
+godot --headless --fixed-fps 60 -- --autoplay --demo    # ...or just the Queen demo
 ```
 
 CI does all of this on every pull request (`.github/workflows/game.yml`). `test_balance` also prints a balance report (rounds per fight, win and bust rates) to compare with the targets.
