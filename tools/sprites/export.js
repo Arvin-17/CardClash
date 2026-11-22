@@ -64,6 +64,15 @@ for (const m of ['bonk', 'pilfer', 'dig']) sheet(`${Q}_attack_${m}`, { ...C, fra
 still(`enemies/${Q}.png`, C.w, C.h, (el) => charFrame(el, 'queen', { mode: 'idle' }, 0));
 still(`enemies/${Q}_rage.png`, C.w, C.h, (el) => charFrame(el, 'queen', { mode: 'rage' }, 0));
 
+// Act bosses and the Knave: idle loop, the tell and their one attack (keys match enemies.json ids).
+const BOSSES = [['mad_hatter', 'hatter', 'move_down'], ['cheshire_cat', 'cheshire', 'grin'], ['knave_of_hearts', 'knave', 'pilfer']];
+for (const [id, who, attack] of BOSSES) {
+  sheet(`${id}_idle`, { ...C, frames: 34, fps: 10, loop: true, draw: (el, t) => charFrame(el, who, { mode: 'idle' }, t) });
+  sheet(`${id}_tell`, { ...C, frames: 7, fps: 10, loop: false, draw: (el, t) => charFrame(el, who, { mode: 'action' }, t) });
+  sheet(`${id}_attack_${attack}`, { ...C, frames: 32, fps: 10, loop: false, draw: (el, t) => charFrame(el, who, { mode: 'action' }, t) });
+  still(`enemies/${id}.png`, C.w, C.h, (el) => charFrame(el, who, { mode: 'idle' }, 0));
+}
+
 // Rooms (one per act), the title screen, endings and the rabbit hole: full 480x270 screens.
 const S = { w: 480, h: 270 };
 const room = (scene) => (el, t) => rawFrame(el, scene, { mood: 'calm', boss: 'none' }, t);

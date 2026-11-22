@@ -20,6 +20,10 @@ npm run export
 cd ../../game && godot --headless --import   # creates the .import files for new sheets
 ```
 
+`@napi-rs/canvas` is pinned to **0.1.65**: newer 0.1.x releases drop the layered character
+bodies (only hands and faces render). Re-exporting with the pinned version reproduces the
+committed art pixel for pixel.
+
 Every sheet is a grid of equal frames, left to right, top to bottom, at most 3840 px wide.
 To add an animation, draw it in `engine.js`, add a `sheet(...)` line in `export.js`, then
 reference its manifest key from the game (`AnimLib.frames({...})`).
