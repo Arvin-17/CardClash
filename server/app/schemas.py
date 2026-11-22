@@ -11,7 +11,9 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from .names import clean_name
 
-BATTLES_PER_ACT = 5  # 4 soldiers + the Queen
+# A full run: Act 1 (2 soldiers + the Mad Hatter), Act 2 (2 soldiers + the Cheshire Cat),
+# Act 3 (the Knave + the Queen).
+BATTLES_PER_RUN = 8
 _CARD_ID = re.compile(r"^[a-z0-9_]{1,32}$")
 
 
@@ -58,7 +60,7 @@ class RunIn(BaseModel):
     is_daily: bool = False
     won: bool
     act: str = Field(pattern=r"^[a-z0-9_]{1,32}$", examples=["act3_court"])
-    battles_won: int = Field(ge=0, le=BATTLES_PER_ACT)
+    battles_won: int = Field(ge=0, le=BATTLES_PER_RUN)
     time_ms: int = Field(ge=30_000, lt=2 * 60 * 60 * 1000, description="Run length; at least 30 s, under 2 h")
     stats: RunStats
     game_version: str = Field(pattern=r"^\d+\.\d+\.\d+$", examples=["0.1.0"])
@@ -70,8 +72,8 @@ class RunIn(BaseModel):
 
     @model_validator(mode="after")
     def _won_means_queen_beaten(self) -> "RunIn":
-        if self.won != (self.battles_won == BATTLES_PER_ACT):
-            raise ValueError(f"won must be true exactly when battles_won == {BATTLES_PER_ACT}")
+        if self.won != (self.battles_won == BATTLES_PER_RUN):
+            raise ValueError(f"won must be true exactly when battles_won == {BATTLES_PER_RUN}")
         return self
 
 

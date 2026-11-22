@@ -17,10 +17,14 @@ var max_hp: int = 30
 var gold: int = 0
 var deck: Array[String] = []
 var trinkets: Array[String] = []
-var act_id: String = "act3_court"
-## This run's battle order: shuffled soldiers, boss last.
+## The act being played: act1_tea, then act2_wood, then act3_court (acts.json order).
+var act_id: String = "act1_tea"
+var act_index: int = 0
+## This act's battle order: shuffled soldiers, boss last.
 var battles: Array[String] = []
 var battle_index: int = 0
+## Wins across the whole run (all acts), for the ending and the leaderboard.
+var battles_won: int = 0
 var is_daily: bool = false
 var daily_date: String = ""
 var stats: Dictionary = {}
@@ -54,7 +58,10 @@ func new_run(seed_value: int, daily: bool = false, date: String = "") -> void:
 	for id: Variant in GameData.rule("starter_deck", []):
 		deck.append(str(id))
 	trinkets.clear()
+	act_index = 0
+	act_id = act_ids()[0]
 	battle_index = 0
+	battles_won = 0
 	stats = _empty_stats()
 	outcome = {}
 	last_trinket = ""
@@ -62,6 +69,22 @@ func new_run(seed_value: int, daily: bool = false, date: String = "") -> void:
 	_segment_start = Time.get_ticks_msec()
 	battles = act_order(act_id, Rng.rng)
 	active = true
+
+
+## The acts in play order (acts.json order): Tea Party, Tulgey Wood, Queen's Court.
+static func act_ids() -> Array[String]:
+	var ids: Array[String] = []
+	for id: Variant in GameData.acts:
+		ids.append(str(id))
+	return ids
+
+
+## Every fight in a full run, across all acts.
+static func total_battles() -> int:
+	var n := 0
+	for id: String in act_ids():
+		n += (GameData.act(id).get("battles", []) as Array).size()
+	return n
 
 
 ## Shuffle the soldiers with the run seed so each run's order differs; the boss is always last.
@@ -86,23 +109,46 @@ func current_enemy_id() -> String:
 	return battles[clampi(battle_index, 0, battles.size() - 1)]
 
 
-func is_complete() -> bool:
+## This act's fights are all won (its boss is down).
+func act_complete() -> bool:
 	return battle_index >= battles.size()
 
 
-## After each win: gold (run.gold_per_soldier, plus the Diamond Soldier's bonus) and a small heal.
+func is_final_act() -> bool:
+	return act_index >= act_ids().size() - 1
+
+
+## The whole run is won: the last act's boss, the Queen, is down.
+func is_complete() -> bool:
+	return act_complete() and is_final_act()
+
+
+## After an act's boss (and the shop): down the rabbit hole into the next act.
+func advance_act() -> void:
+	if is_final_act():
+		return
+	act_index += 1
+	act_id = act_ids()[act_index]
+	battles = act_order(act_id, Rng.rng)
+	battle_index = 0
+	save()
+
+
+## After each win: gold (run.gold_per_soldier for soldiers, plus any enemy's bonus_gold, which
+## is how the Hatter and the Cat pay for the shop between acts) and a small heal.
 ## No full heals, so damage carries tension across the act.
 func record_win(enemy_id: String) -> Dictionary:
 	var enemy: Dictionary = GameData.enemy(enemy_id)
-	var earned := 0
+	var earned := int(enemy.get("bonus_gold", 0))
 	if not bool(enemy.get("boss", false)):
-		earned = int(GameData.rule("run.gold_per_soldier", 10)) + int(enemy.get("bonus_gold", 0))
+		earned += int(GameData.rule("run.gold_per_soldier", 10))
 	gold += earned
 	var healed := mini(int(GameData.rule("run.heal_after_win", 5)), max_hp - hp)
 	hp += maxi(0, healed)
 	battle_index += 1
+	battles_won += 1
 	last_trinket = ""
-	if battle_index == int(GameData.rule("run.trinket_after_battle", 2)):
+	if battles_won == int(GameData.rule("run.trinket_after_battle", 2)):
 		_award_trinket()
 	if is_complete():
 		outcome = {"won": true, "enemy": enemy_id}
@@ -174,7 +220,7 @@ func run_payload() -> Dictionary:
 		"is_daily": is_daily,
 		"won": bool(outcome.get("won", false)),
 		"act": act_id,
-		"battles_won": battle_index,
+		"battles_won": battles_won,
 		"time_ms": time_ms(),
 		"stats": _int_stats(),
 		"game_version": GameData.game_version(),
@@ -235,8 +281,10 @@ func save() -> void:
 		"deck": deck,
 		"trinkets": trinkets,
 		"act_id": act_id,
+		"act_index": act_index,
 		"battles": battles,
 		"battle_index": battle_index,
+		"battles_won": battles_won,
 		"is_daily": is_daily,
 		"daily_date": daily_date,
 		"stats": stats,
@@ -269,8 +317,10 @@ func load_saved() -> bool:
 	deck.assign((data["deck"] as Array).map(func(x: Variant) -> String: return str(x)))
 	trinkets.assign((data.get("trinkets", []) as Array).map(func(x: Variant) -> String: return str(x)))
 	act_id = str(data["act_id"])
+	act_index = int(data.get("act_index", maxi(0, act_ids().find(act_id))))
 	battles.assign((data["battles"] as Array).map(func(x: Variant) -> String: return str(x)))
 	battle_index = int(data["battle_index"])
+	battles_won = int(data.get("battles_won", battle_index))
 	is_daily = bool(data.get("is_daily", false))
 	daily_date = str(data.get("daily_date", ""))
 	stats = data.get("stats", _empty_stats())
@@ -278,6 +328,9 @@ func load_saved() -> bool:
 	_elapsed_ms = int(data.get("elapsed_ms", 0))
 	_segment_start = Time.get_ticks_msec()
 	active = true
+	# Saved right after an act's boss: carry on into the next act.
+	if outcome.is_empty() and act_complete() and not is_final_act():
+		advance_act()
 	return true
 
 

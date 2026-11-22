@@ -12,7 +12,7 @@ def run(**over):
         "is_daily": False,
         "won": True,
         "act": "act3_court",
-        "battles_won": 5,
+        "battles_won": 8,
         "time_ms": 512000,
         "stats": {"rounds": 31, "busts": 7, "blackjacks": 3, "cards_played": {"drink_me": 4}},
         "game_version": "0.1.0",
@@ -42,12 +42,12 @@ def test_guide_example_run_is_valid():
 @pytest.mark.parametrize(
     "over",
     [
-        {"battles_won": 6},
+        {"battles_won": 9},
         {"battles_won": -1},
         {"time_ms": 29_999},
         {"time_ms": 2 * 60 * 60 * 1000},
-        {"won": True, "battles_won": 4},
-        {"won": False, "battles_won": 5},
+        {"won": True, "battles_won": 7},
+        {"won": False, "battles_won": 8},
         {"stats": {"rounds": 3, "busts": 4, "blackjacks": 0, "cards_played": {}}},
         {"stats": {"rounds": 3, "busts": 0, "blackjacks": 4, "cards_played": {}}},
         {"stats": {"rounds": 3, "busts": 0, "blackjacks": 0, "cards_played": {"DROP TABLE": 1}}},
@@ -59,3 +59,9 @@ def test_guide_example_run_is_valid():
 def test_invalid_runs_are_rejected(over):
     with pytest.raises(ValidationError):
         RunIn(**run(**over))
+
+
+def test_a_loss_in_an_early_act_is_valid():
+    RunIn(**run(won=False, act="act1_tea", battles_won=2))
+    RunIn(**run(won=False, act="act2_wood", battles_won=5))
+

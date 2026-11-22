@@ -179,6 +179,87 @@
   "fps": 10,
   "loop": false
  },
+ "mad_hatter_idle": {
+  "file": "anim/mad_hatter_idle.png",
+  "w": 128,
+  "h": 112,
+  "frames": 34,
+  "cols": 30,
+  "fps": 10,
+  "loop": true
+ },
+ "mad_hatter_tell": {
+  "file": "anim/mad_hatter_tell.png",
+  "w": 128,
+  "h": 112,
+  "frames": 7,
+  "cols": 7,
+  "fps": 10,
+  "loop": false
+ },
+ "mad_hatter_attack_move_down": {
+  "file": "anim/mad_hatter_attack_move_down.png",
+  "w": 128,
+  "h": 112,
+  "frames": 32,
+  "cols": 30,
+  "fps": 10,
+  "loop": false
+ },
+ "cheshire_cat_idle": {
+  "file": "anim/cheshire_cat_idle.png",
+  "w": 128,
+  "h": 112,
+  "frames": 34,
+  "cols": 30,
+  "fps": 10,
+  "loop": true
+ },
+ "cheshire_cat_tell": {
+  "file": "anim/cheshire_cat_tell.png",
+  "w": 128,
+  "h": 112,
+  "frames": 7,
+  "cols": 7,
+  "fps": 10,
+  "loop": false
+ },
+ "cheshire_cat_attack_grin": {
+  "file": "anim/cheshire_cat_attack_grin.png",
+  "w": 128,
+  "h": 112,
+  "frames": 32,
+  "cols": 30,
+  "fps": 10,
+  "loop": false
+ },
+ "knave_of_hearts_idle": {
+  "file": "anim/knave_of_hearts_idle.png",
+  "w": 128,
+  "h": 112,
+  "frames": 34,
+  "cols": 30,
+  "fps": 10,
+  "loop": true
+ },
+ "knave_of_hearts_tell": {
+  "file": "anim/knave_of_hearts_tell.png",
+  "w": 128,
+  "h": 112,
+  "frames": 7,
+  "cols": 7,
+  "fps": 10,
+  "loop": false
+ },
+ "knave_of_hearts_attack_pilfer": {
+  "file": "anim/knave_of_hearts_attack_pilfer.png",
+  "w": 128,
+  "h": 112,
+  "frames": 32,
+  "cols": 30,
+  "fps": 10,
+  "loop": false
+ },
  "room_act1_tea": {
   "file": "anim/room_act1_tea.png",
   "w": 480,
