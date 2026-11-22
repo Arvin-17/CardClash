@@ -82,8 +82,9 @@ func test_hand_cards_stay_clickable_at_the_play_limit() -> void:
 func test_stand_ends_the_round_at_once() -> void:
 	await _start()
 	assert_false(_c.battle.enemy.stayed, "the enemy is still mid-turn")
+	var enemy_cards := _c.battle.enemy.table.size()
 	_c.stay()
-	assert_true(_c.battle.enemy.stayed, "it played out its turn instantly")
+	assert_eq(_c.battle.enemy.table.size(), enemy_cards, "no more enemy cards once you stand")
 	assert_eq(_c.state, BattleController.State.RESOLVE, "no waiting for the enemy or the timer")
 
 

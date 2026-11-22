@@ -359,15 +359,11 @@ func round_over() -> bool:
 	return both_done() or player_super_bust()
 
 
-## Stand ends the round at once: the enemy plays out the rest of its turn instantly.
-func finish_enemy_turn() -> void:
-	var guard := 0
-	while not enemy.stayed and guard < 20:
-		guard += 1
-		if EnemyAI.decide(self) == EnemyAI.HIT:
-			enemy_hit()
-		else:
-			enemy_stay()
+## Stand ends the round on the spot: the enemy's cards freeze where they are and the totals
+## are compared right away. Standing fast can catch the enemy before it has drawn up.
+func player_stand() -> void:
+	player.stayed = true
+	enemy.stayed = true
 
 
 ## The round timer ran out: everyone stays.
