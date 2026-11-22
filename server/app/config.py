@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     # Comma-separated origins allowed by CORS. Godot's "Run in browser" serves on :8060.
     allowed_origins: str = "http://localhost:8060,http://127.0.0.1:8060,http://localhost:8000"
     # Runs from builds older than this are rejected so stale balance doesn't pollute the board.
-    game_version: str = "0.1.0"
+    game_version: str = "0.2.0"
     # The shared data folder: one copy of every card, read at startup.
     data_dir: Path = REPO_ROOT / "game" / "data"
     # Per-IP limit for POST /run.

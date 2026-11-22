@@ -1,7 +1,7 @@
 def test_health_reports_ok_and_version(client):
     r = client.get("/health")
     assert r.status_code == 200
-    assert r.json() == {"ok": True, "version": "0.1.0"}
+    assert r.json() == {"ok": True, "version": "0.2.0"}
 
 
 def test_docs_are_served(client):
