@@ -1,5 +1,5 @@
 extends Control
-## Act progress: 4 shuffled soldiers, then the Queen.
+## Act progress: this act's fights (shuffled soldiers, then its boss), and which act of three.
 
 const SUIT_ICON := {"spades": "♠", "clubs": "♣", "diamonds": "♦", "hearts": "♥"}
 
@@ -16,9 +16,9 @@ func _ready() -> void:
 		room.modulate = Color(0.32, 0.3, 0.38)
 		add_child(room)
 	var act: Dictionary = GameData.act(RunState.act_id)
-	_add(Palette.label(str(act.get("name", "")).to_upper(), Palette.RED, true), Vector2(0, 24), 480)
+	_add(Palette.label("ACT %d: %s" % [RunState.act_index + 1, str(act.get("name", "")).to_upper()], Palette.RED, true), Vector2(0, 24), 480)
 	var mode := "DAILY RUN %s" % RunState.daily_date if RunState.is_daily else "SEED %d" % RunState.run_seed
-	_add(Palette.label(mode, Palette.GREEN), Vector2(0, 46), 480)
+	_add(Palette.label("%s   ACT %d OF %d   BATTLES WON %d/%d" % [mode, RunState.act_index + 1, RunState.act_ids().size(), RunState.battles_won, RunState.total_battles()], Palette.GREEN), Vector2(0, 46), 480)
 
 	var n: int = RunState.battles.size()
 	var spacing := 80
@@ -34,7 +34,8 @@ func _ready() -> void:
 		node.size = Vector2(32, 44)
 		add_child(node)
 		var boss := bool(enemy.get("boss", false))
-		var icon := Palette.label("Q" if boss else SUIT_ICON.get(str(enemy.get("suit", "")), "?"), Palette.suit_color(str(enemy.get("suit", ""))), true)
+		var glyph := str(enemy.get("icon", "Q" if boss else SUIT_ICON.get(str(enemy.get("suit", "")), "?")))
+		var icon := Palette.label(glyph, Palette.suit_color(str(enemy.get("suit", ""))), true)
 		icon.position = Vector2(0, 12)
 		icon.size = Vector2(32, 16)
 		icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

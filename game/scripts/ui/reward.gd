@@ -1,5 +1,5 @@
 extends Control
-## The shop after each win: your whole deck is on show, the offered cards have gold
+## The shop after each win (and between acts): your whole deck is on show, the offered cards have gold
 ## prices, and you can buy and remove as many cards as you can afford before moving on.
 ## Prices, removal cost and the minimum deck size: rules.json "shop".
 
@@ -227,4 +227,9 @@ func _finish() -> void:
 		return
 	_done = true
 	RunState.save()
-	Transition.go(RunState.MAP_SCENE)
+	# The act's boss is down: fall down the rabbit hole into the next act.
+	if RunState.act_complete() and not RunState.is_final_act():
+		RunState.advance_act()
+		Transition.rabbit_hole(RunState.MAP_SCENE, str(GameData.act(RunState.act_id).get("name", "")))
+	else:
+		Transition.go(RunState.MAP_SCENE)

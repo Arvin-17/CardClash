@@ -28,7 +28,7 @@ func _ready() -> void:
 	var s: Dictionary = RunState.stats
 	var secs: int = RunState.time_ms() / 1000
 	_stats = _label(Vector2(250, 70), "\n".join([
-		"BATTLES WON  %d/%d" % [RunState.battle_index, RunState.battles.size()],
+		"BATTLES WON  %d/%d" % [RunState.battles_won, RunState.total_battles()],
 		"ROUNDS       %d" % int(s.get("rounds", 0)),
 		"BUSTS        %d" % int(s.get("busts", 0)),
 		"BLACKJACKS   %d" % int(s.get("blackjacks", 0)),
@@ -99,7 +99,7 @@ func _on_board(entries: Variant, daily: bool) -> void:
 	var lines: Array[String] = ["TODAY'S TOP 10" if daily else "TOP 10"]
 	for e: Dictionary in entries:
 		var secs := int(e.get("time_ms", 0)) / 1000
-		var result := "QUEEN" if bool(e.get("won", false)) else "%d/5" % int(e.get("battles_won", 0))
+		var result := "QUEEN" if bool(e.get("won", false)) else "%d/%d" % [int(e.get("battles_won", 0)), RunState.total_battles()]
 		lines.append("%2d %-16s %-5s %d:%02d" % [int(e.get("rank", 0)), str(e.get("player_name", "")).to_upper(), result, secs / 60, secs % 60])
 	lines.append("")
 	lines.append("ENTER: MENU")

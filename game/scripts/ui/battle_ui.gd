@@ -382,7 +382,11 @@ func _refresh() -> void:
 	var pt := b.player.total(b.target)
 	_player_total.text = "YOU %d" % pt
 	var pt_color := Palette.CREAM
-	if pt > b.target:
+	if b.total_hidden_from_player:
+		# The Cheshire Cat took it: no number, no bust colour, nothing that gives it away.
+		_player_total.text = "YOU ??"
+		pt_color = Palette.LAVENDER
+	elif pt > b.target:
 		pt_color = Palette.RED_HI
 	elif pt == b.target:
 		pt_color = Palette.GOLD_HI
@@ -417,7 +421,7 @@ func _refresh() -> void:
 		v.pressed.connect(_request_play.bind(i))
 		v.mouse_entered.connect(func() -> void: _message.text = v.tooltip_text)
 		_hand_row.add_child(v)
-	_set_tension(pt >= TENSION_AT and pt <= b.target and not b.player.stayed)
+	_set_tension(pt >= TENSION_AT and pt <= b.target and not b.player.stayed and not b.total_hidden_from_player)
 
 
 ## Card counting: how many 10-value and low cards are still unseen in the blind deck.
@@ -532,6 +536,8 @@ func _on_total_changed(who: String, total: int) -> void:
 	var b := controller.battle
 	if b == null or controller.state == BattleController.State.DEAL:
 		return
+	if who == "player" and b.total_hidden_from_player:
+		return  # no BUST or 21 banner while your total is hidden
 	if who == "player":
 		if total > b.target and not _busted_shown:
 			_busted_shown = true
