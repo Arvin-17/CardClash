@@ -4,7 +4,47 @@ CardClash is a pixel-art card battler built for a Wonderland-themed hackathon. Y
 
 Win the run and the Queen of Hearts loses her head; lose, and Alice does.
 
-## A run: three acts, eight fights
+## How to play
+
+### Start the game
+
+1. Install [Godot 4.7](https://godotengine.org/download) (the standard build, not .NET).
+2. Open `game/project.godot` in Godot and press **F5**, or from a terminal run `godot --path game`.
+3. The first time you start, the **How to Play** screen walks you through the rules with screenshots and live demos. It's on the menu any time: **HOW TO PLAY [T]**.
+4. Type your name on the menu (it goes on the leaderboard), then pick:
+   - **NEW RUN** (Enter): a fresh shuffle.
+   - **DAILY RUN** (D): the same shuffle for everyone today, with its own leaderboard. This needs the server.
+   - **CONTINUE** (C): pick up a run you left (saved after every fight).
+
+The leaderboard and the daily run need the API (see [Run the API locally](#run-the-api-locally)). Without it the menu says OFFLINE and everything else still works.
+
+### Controls
+
+| Key | Action |
+| --- | --- |
+| **H** | Hit: draw a card |
+| **Space** (or **S**) | Stand: end the round now |
+| **E** | Heal: +3 HP (uses one of your 2 card plays) |
+| **1–5** (or click) | Play a hand card |
+| **M** | Mute |
+| **Enter** | Continue / next |
+| **Esc** | Close a choice, or the How to Play screen |
+| **T** (menu) | How to Play |
+
+### The rules
+
+- **Get closer to 21 than the enemy without going over.** Whoever is closer wins the round: the loser takes the difference plus the winner's base attack. Exactly 21 is a critical (×2). Busting costs you `total − 21` plus the enemy's attack (×2 on a super bust). Knock the enemy's HP to 0 to win the fight.
+- Each round, you and the enemy get 2 cards from the shared **blind deck** (a standard 52). Your hand draws up to 3 cards from your own **built deck**.
+- You have 10 seconds (when time runs out, you stand on what you have):
+  - **Hit**: draw a blind card (not while you're over 21).
+  - **Play**: play up to **2 hand cards per round**, any time the round is live (numbers 1–4, or effects like Drink Me). Hand cards are never greyed out: a third play just tells you the limit. The count resets every round.
+  - **Heal** (**E**): +3 HP, always available. It uses one of your 2 card plays.
+  - **Stand**: the round ends **right away**. The enemy can't add another card: its total freezes where it is and the totals are compared. Stand fast and you can catch it before it has drawn up.
+- **Busting doesn't end your turn.** Over 21 you can keep playing cards (like Drink Me) to get back under. But reaching **30** is a **super bust**: the round ends on the spot and you take double damage.
+- The enemy plays on its own clock. Its **intent bar** starts empty every round and fills toward one surprise attack, about 7 seconds into the round. In the last 2 seconds before one lands, the enemy flashes red with a **!** and a warning beep plays. You never see the attack's name, only what it did to you.
+- **After each win, the Shop.** Your whole deck is on show. Buy as many of the 3 offered cards as you can afford (10 / 15 / 25 gold by rarity), and click a deck card twice to remove it for 5 gold, down to a 6-card minimum. Each soldier you beat pays 20 gold.
+
+### A run: three acts, eight fights
 
 | Act | Fights |
 | --- | --- |
@@ -14,18 +54,13 @@ Win the run and the Queen of Hearts loses her head; lose, and Alice does.
 
 After every win you visit the shop. After an act's boss you fall down the rabbit hole into the next act. Beat the Queen to win the run.
 
-## How a round works
+### Tips
 
-- Each round, you and the enemy get 2 cards from the shared **blind deck** (a standard 52). Your hand draws up to 3 cards from your own **built deck**.
-- You have 10 seconds:
-  - **Hit**: draw a blind card (not while you're over 21).
-  - **Play**: play up to **2 hand cards per round**, any time the round is live (numbers 1–4, or effects like Drink Me). Hand cards are never greyed out: a third play just tells you the limit. The count resets every round.
-  - **Heal** (**E**): +3 HP, always available. It uses one of your 2 card plays.
-  - **Stand**: the round ends **right away**. The enemy can't add another card: its total freezes where it is and the totals are compared. Stand fast and you can catch it before it has drawn up.
-- **Busting doesn't end your turn.** Over 21 you can keep playing cards (like Drink Me) to get back under. But reaching **30** is a **super bust**: the round ends on the spot and you take double damage.
-- The enemy plays on its own clock. Its **intent bar** starts empty every round and fills toward one surprise attack (7.5 s in for soldiers, 6.5 s for the Queen). In the last 2 seconds before one lands, the enemy flashes red with a **!** and a warning beep plays. You never see the attack's name, only what it did to you.
-- **After each win, the Shop.** Your whole deck is on show. Buy as many of the 3 offered cards as you can afford (10 / 15 / 25 gold by rarity), and click a deck card twice to remove it for 5 gold, down to a 6-card minimum. Each soldier you beat pays 20 gold.
-- Closer to 21 wins: the loser takes the difference plus the winner's base attack. Exactly 21 is a critical (×2). Busting costs you `total − 21` plus the enemy's attack (×2 on a super bust).
+- **Stand early.** On 17 or more, standing before the enemy has drawn up often wins the round outright.
+- **Keep a Drink Me** for when a hit takes you over 21.
+- **Watch the attack bar.** When the **!** flashes, the attack is a second away. Standing before it fires dodges it.
+- **Count cards.** The numbers under the enemy's HP (`10S` and `LOW`) are how many 10-value and low cards are still in the blind deck.
+- **Spend your gold.** Removing weak cards (like the 1s) makes your good cards come up more often.
 
 ## Design
 
@@ -217,18 +252,16 @@ Settings come from environment variables; see `server/.env.example`.
 Stretch extras: `DELETE /run/{id}` with an `X-Admin-Key` header, and `GET /board`, an auto-refreshing leaderboard page for a second screen.
 
 **Anti-cheat basics.** Any run sent from a browser can be faked, so the server stops junk and casual cheating:
-- It checks every range (battles 0–5, at least 30 s, busts ≤ rounds, `won` only with 5 battles).
+- It checks every range (battles 0–8, at least 30 s, busts ≤ rounds, `won` only with all 8 battles).
 - It cleans names and rate-limits `POST /run`.
 - It rejects old game versions, and daily runs that don't use today's seed.
 
-## Run the game
+## Develop: tests, debug keys and the autoplay bot
 
-1. Install [Godot 4.7](https://godotengine.org/download) (standard build, not .NET).
-2. Open `game/project.godot` and press **F5**. Any scene also runs on its own with **F6**.
-3. Controls:
-   - **H** hit, **Space** stand (or **S**), **E** heal, **1–5** play a hand card, **M** mute
-   - debug builds only: **F1** overlay, **F2** instant win, **F3** print seed
-4. The game talks to the API at `http://127.0.0.1:8000` by default. To point it elsewhere, run `godot --path game -- --api=https://...`, or edit `cardclash/api/base_url` in Project Settings. Offline, everything still works except the leaderboard and the daily run.
+- Any scene runs on its own with **F6** in the editor.
+- Debug builds have extra keys: **F1** overlay, **F2** instant win, **F3** print the seed.
+- The game talks to the API at `http://127.0.0.1:8000` by default. To point it elsewhere, run `godot --path game -- --api=https://...`, or edit `cardclash/api/base_url` in Project Settings.
+- The How to Play screenshots come from `tools/howto/capture.gd`. Re-run it (instructions at the top of the file) when the battle screen's look changes.
 
 Unit tests use [GUT](https://github.com/bitwes/Gut). Install **GUT 9.7.1** from the Asset Library (it lands in `game/addons/gut`, which git ignores), then:
 
@@ -236,7 +269,7 @@ Unit tests use [GUT](https://github.com/bitwes/Gut). Install **GUT 9.7.1** from 
 cd game
 godot --headless --import
 godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://tests -gexit
-godot --headless --fixed-fps 60 -- --autoplay    # a bot plays a whole run
+godot --headless --fixed-fps 60 -- --autoplay    # for CI: a bot plays a whole run
 ```
 
 CI does all of this on every pull request (`.github/workflows/game.yml`). `test_balance` also prints a balance report (rounds per fight, win and bust rates) to compare with the targets.
