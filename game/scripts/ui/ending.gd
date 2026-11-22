@@ -28,7 +28,7 @@ func _ready() -> void:
 	var s: Dictionary = RunState.stats
 	var secs: int = RunState.time_ms() / 1000
 	_stats = _label(Vector2(250, 70), "\n".join([
-		"BATTLES WON  %d/%d" % [RunState.battles_won, RunState.total_battles()],
+		"BATTLES WON  %d/%d" % [RunState.battles_won, RunState.battles_in_run()],
 		"ROUNDS       %d" % int(s.get("rounds", 0)),
 		"BUSTS        %d" % int(s.get("busts", 0)),
 		"BLACKJACKS   %d" % int(s.get("blackjacks", 0)),
@@ -70,7 +70,15 @@ func _label(pos: Vector2, text: String, color: Color) -> Label:
 
 func _submit() -> void:
 	var payload: Dictionary = RunState.run_payload()
+	var demo := RunState.is_demo
 	RunState.end_run()
+	if demo:
+		_status.text = "QUEEN DEMO: NOT ON THE LEADERBOARD"
+		_board.text = "ENTER: MENU"
+		if Autoplay.enabled():
+			Autoplay.log_line("run %s (demo), battles won %d, rounds %d" % ["won" if payload["won"] else "lost", payload["battles_won"], payload["stats"]["rounds"]])
+			get_tree().quit()
+		return
 	_status.text = "SUBMITTING RUN..."
 	Api.submit_run(payload, _on_submitted.bind(payload))
 
