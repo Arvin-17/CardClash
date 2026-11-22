@@ -112,8 +112,8 @@ func test_hedgehog_shield_blocks_the_next_attack() -> void:
 
 
 func test_attack_messages_never_name_the_attack() -> void:
-	var names := ["dig", "bonk", "pilfer", "off with it", "off with its head", "off_with"]
-	for id: String in ["spade_soldier", "club_soldier", "diamond_soldier", "heart_soldier", "queen_of_hearts"]:
+	var names := ["dig", "bonk", "pilfer", "off with it", "off with its head", "off_with", "move down", "grin"]
+	for id: String in ["spade_soldier", "club_soldier", "diamond_soldier", "heart_soldier", "mad_hatter", "cheshire_cat", "knave_of_hearts", "queen_of_hearts"]:
 		var b := TestHelpers.battle(id, DECK, ["num_1", "teacup"])
 		TestHelpers.set_table(b.player, ["10", "5"])
 		var said: Array[String] = []
@@ -133,3 +133,30 @@ func test_every_surprise_in_enemies_json_has_a_script() -> void:
 			kinds = e["surprise_params"]["pattern"]
 		for kind: String in kinds:
 			assert_not_null(EffectRegistry.enemy_effect(kind), "missing script for %s" % kind)
+
+
+func test_mad_hatter_swaps_your_cards_with_his() -> void:
+	var b := TestHelpers.battle("mad_hatter", DECK)
+	TestHelpers.set_table(b.player, ["10", "9"])
+	TestHelpers.set_table(b.enemy, ["6", "5"])
+	b.enemy.stayed = true
+	assert_eq(b.fire_surprise(), "move_down")
+	assert_eq(b.player.total(), 11)
+	assert_eq(b.enemy.total(), 19)
+	assert_true(b.enemy.stayed == false, "he keeps playing with his new cards")
+
+
+func test_cheshire_cat_hides_your_total_for_the_round() -> void:
+	var b := TestHelpers.battle("cheshire_cat", DECK)
+	TestHelpers.set_table(b.player, ["10", "9", "5"])
+	assert_eq(b.fire_surprise(), "grin")
+	assert_true(b.total_hidden_from_player)
+	assert_not_null(b.player_hit(), "over 21 but you can't tell, so hitting is still allowed")
+	b.start_round()
+	assert_false(b.total_hidden_from_player, "it comes back next round")
+
+
+func test_knave_steals_a_card_from_your_hand() -> void:
+	var b := TestHelpers.battle("knave_of_hearts", [], ["num_1", "teacup", "eat_me"])
+	assert_eq(b.fire_surprise(), "pilfer")
+	assert_eq(b.hand.size(), 2)

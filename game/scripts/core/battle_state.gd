@@ -48,6 +48,8 @@ var hits_this_round: int = 0
 var shield: int = 0
 ## Per-round flags set by effects.
 var hide_total: bool = false
+## Cheshire Cat's Grin: Alice can't see her own total this round (it shows as ??).
+var total_hidden_from_player: bool = false
 var crit_boost: bool = false
 var peeked_card: Card = null
 
@@ -102,6 +104,7 @@ func start_round() -> void:
 	_clear_table(player)
 	_clear_table(enemy)
 	hide_total = false
+	total_hidden_from_player = false
 	crit_boost = false
 	peeked_card = null
 	hits_this_round = 0
@@ -161,7 +164,7 @@ func draw_cards(n: int) -> void:
 ## Hit: draw the top blind card. Not while you're over 21: going bust no longer ends
 ## your turn (you can play cards to get back under), but there is nothing to gain by hitting.
 func player_hit() -> Card:
-	if player.stayed or player.is_bust(target):
+	if player.stayed or (player.is_bust(target) and not total_hidden_from_player):
 		return null
 	var card := _deal(player)
 	hits_this_round += 1
