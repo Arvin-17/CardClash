@@ -8,8 +8,8 @@ extends Node
 ##               SURPRISE
 ##
 ## Rounds are real-time inside a short window (round.seconds) but resolve in fixed steps,
-## so they stay fair and testable. STAND ends the round at once (the enemy finishes its
-## turn instantly), and so does a super bust (30+). Logic changes state first, then emits on Events. The UI only
+## so they stay fair and testable. STAND ends the round at once (the enemy's cards freeze
+## where they are), and so does a super bust (30+). Logic changes state first, then emits on Events. The UI only
 ## calls hit()/stay()/play() and listens; it never changes game state itself.
 
 enum State { DEAL, ROUND_ACTIVE, SURPRISE, RESOLVE, BATTLE_END }
@@ -99,10 +99,9 @@ func hit() -> void:
 func stay() -> void:
 	if not can_act():
 		return
-	battle.player_stay()
+	# STAND ends the round now: the enemy can't add another card, totals are compared as they are.
+	battle.player_stand()
 	Events.message.emit("STAND ON %d." % battle.player.total(battle.target))
-	# STAND ends the round now: the enemy plays out the rest of its turn instantly.
-	battle.finish_enemy_turn()
 	_check_round_end()
 
 
